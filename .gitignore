@@ -1,0 +1,33 @@
+# Local SDKs, private installations, builds, and investigation evidence
+.local/
+.venv/
+runtime/
+framework/
+references/
+verification/
+installation.json
+patch-log.txt
+build/
+dist/
+out/
+__pycache__/
+*.py[cod]
+.DS_Store
+# Microsoft and third-party executable/package artifacts are user supplied.
+*.dll
+*.exe
+*.dylib
+*.so
+*.pdb
+*.netmodule
+*.nupkg
+*.zip
+*.tar.gz
+*.pem
+*.pfx
+*.key
+.env
+.env.*
+# Generated compiler metadata archives (source XML remains tracked)
+*.runtime
+*_Ax*.md
