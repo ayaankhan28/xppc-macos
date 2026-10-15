@@ -8,9 +8,9 @@ to reproduce the supported compiler setup. A team administrator obtains the
 Microsoft inputs once through authorized access. Teammates can then reuse those
 inputs without finding DLLs on a Windows machine.
 
-The compiler recipe is still pinned to **7.0.8199.55** on native ARM64 Mono
-**6.14.1**. Easier installation does not expand the qualified compiler versions
-or turn the small reference profile into every application's SDK.
+The qualified baseline is compiler **7.0.8199.55** with native ARM64 Mono
+**6.14.1**. Other builds can pass method compatibility checks and local tests.
+See [version compatibility](compatibility.md) for eligibility and current evidence.
 
 ## Choose your input route
 
@@ -18,7 +18,7 @@ or turn the small reference profile into every application's SDK.
 | --- | --- |
 | Three Microsoft `.nupkg` files downloaded from LCS or your feed | Import and install below |
 | Already extracted compiler and SDK packages | Install from folders below |
-| An authorized internal NuGet feed | [Restore the exact packages](microsoft-packages.md#restore-from-your-organisations-feed), then import |
+| An authorized internal NuGet feed | [Restore selected packages](microsoft-packages.md#restore-from-your-organisations-feed), then import |
 | A trusted bundle prepared by your team | Verify and install the bundle below; no package downloads needed |
 
 Every install route builds the compatibility helpers on the receiving Mac and
@@ -27,14 +27,15 @@ another developer's absolute Mono path or copy a machine-bound installation.
 
 ## Host prerequisites
 
-Install Python **3.9+**, native ARM64 Mono/mcs **6.14.1**, and Apple's Xcode
-Command Line Tools. Mono.Cecil **0.11.1.0** is discovered beside Mono. See the
+Install Python **3.9+**, native ARM64 Mono/mcs, and Apple's Xcode
+Command Line Tools. Mono.Cecil is discovered beside Mono. Tested versions are
+Mono **6.14.1** and Cecil **0.11.1.0**; alternatives must pass helper builds and local tests. See the
 [host setup instructions](setup.md#1-host-tools). None of the scripts installs,
 upgrades or replaces these tools.
 
 ## Import and install downloaded packages
 
-Download the three exact packages listed in [Microsoft inputs](microsoft-packages.md).
+Download the compiler and SDK packages listed in [Microsoft inputs](microsoft-packages.md), selecting the versions appropriate to your project.
 Keep the original `.nupkg` files together, including any original notices.
 The importer reads package IDs and versions from their manifests, so portal
 download filenames do not have to be renamed. It preserves the compiler
@@ -45,13 +46,17 @@ python3 tools/team_setup.py from-packages \
   --package-directory /path/to/downloaded-microsoft-packages
 ```
 
-This imports packages into `.local/team-inputs/microsoft`, downloads the four
-hash-locked public NuGet reference packages, prepares the tested reference
-profile, and installs into `.local/toolchain`. The compiler's **224 input files**
-must match the pinned inventory; the selected **265 model-reference files**
-must match the profile. An SDK package's version label alone is not proof that
-its contents are suitable. SDK archive hashes are recorded locally; they are
-not claimed to be independently verified upstream signatures.
+This imports packages into `.local/team-inputs/microsoft`, downloads four
+hash-locked public NuGet reference packages, copies supplied SDK model references,
+and installs into `.local/toolchain`. One version per package is selected
+automatically. With multiple versions, supply `--compiler-version`,
+`--platform-version` and/or `--application-version` to disambiguate.
+The installer checks patch methods and runs real compilation tests.
+SDK archive hashes record selected content; they are not independently verified
+upstream signatures. Use `--model ApplicationPlatform` (repeatable) to limit
+modules, and `--managed-reference /path/to/extra.dll` for additional dependencies.
+Missing references fail strict verification; supply the matching dependencies.
+`--reference-profile qualified` explicitly selects the old 265-file exact profile.
 
 To use extracted inputs instead:
 
@@ -91,8 +96,10 @@ framework references, prepared model references, a per-file size/hash manifest,
 public-package notices retained during preparation, and a distribution notice.
 It excludes business models, credentials, build logs,
 personal source paths and an installed/patched runtime. It includes every file
-in the supplied prepared reference set, which must contain the tested profile.
-For the default profile this is **857 compiler/reference files / 507.4 MB
+in the supplied prepared reference set. Bundling does not certify compiler
+compatibility; the receiving installer checks it. Version 2 bundles allow other
+compiler and reference selections; existing version 1 bundles remain readable.
+For the qualified profile this is **857 compiler/reference files / 507.4 MB
 uncompressed**, plus the small notice files.
 Allow room for the archive, extracted inputs, installation copy and build output.
 
@@ -144,7 +151,7 @@ release or private feed has been published by this source repository.
 ```
 
 For models beyond the supplied fixtures, use the matching SDK modules from the
-same authorized package source. The small default profile is insufficient for
+same authorized package source. The optional small qualified profile is insufficient for
 a full application model. Preserve additional SDK roots separately and pass
 each model-reference root explicitly:
 
@@ -156,7 +163,6 @@ each model-reference root explicitly:
 ```
 
 The existing [dependency preparation tool](setup.md#a-larger-reference-set) can
-stage larger model selections. A prepared set containing the tested profile
-can also be bundled; conflicting bytes at the same path fail rather than being
+stage larger model selections. A prepared set can also be bundled; conflicting bytes at the same path fail rather than being
 silently substituted. No promise of arbitrary-model compilation or application
 runtime execution is implied by a successful installation.

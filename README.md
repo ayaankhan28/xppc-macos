@@ -6,9 +6,9 @@
 
 **Built under [Lab0.ai](https://lab0.ai)** · **Ayaan Khan** · [ayaan.khan2812@gmail.com](mailto:ayaan.khan2812@gmail.com)
 
-[Team setup](docs/team-setup.md) · [Microsoft packages](docs/microsoft-packages.md) · [Architecture](docs/architecture.md) · [Compiler tests](docs/validation.md) · [Troubleshooting](docs/troubleshooting.md)
+[Version compatibility](docs/compatibility.md) · [Team setup](docs/team-setup.md) · [Microsoft packages](docs/microsoft-packages.md) · [Architecture](docs/architecture.md) · [Compiler tests](docs/validation.md) · [Troubleshooting](docs/troubleshooting.md)
 
-**Apple Silicon** · **Mono 6.14.1** · **Compiler 7.0.8199.55** · **MIT original source**
+**Apple Silicon** · **Build compatibility checks** · **MIT original source**
 
 </div>
 
@@ -19,12 +19,12 @@ An open-source compatibility layer for running Microsoft's managed X++ compiler 
 **Bring your own Microsoft compiler and SDK packages.** This repository contains the adaptation source, installer, launcher, dependency preparation, examples, and compiler checks. Microsoft binaries are not included or relicensed.
 
 **Acquire once, reuse across your team.** Import downloaded Microsoft packages,
-restore the pinned versions from your authorized feed, or install from a verified
+restore selected versions from your authorized feed, or install from a verified
 private input bundle. The scripts prepare dependencies, build the port and run
 the compiler checks. No manual DLL selection or Windows extraction is needed.
 [Team setup →](docs/team-setup.md) · [Exact download locations →](docs/microsoft-packages.md)
 
-> **Experimental · version-pinned.** Supports one checked compiler package and native ARM64 Mono. Compilation is verified with positive and negative fixtures and optional comparison against the original Windows compiler. Other package versions require their own adaptation and qualification.
+> **Compatibility checked, not restricted to one version number.** Other managed compiler builds can use this recipe when their patch methods pass inspection and the local compiler tests pass. The independently qualified Microsoft release remains **7.0.8199.55**. No claim that every newer or older release works. [How version support works →](docs/compatibility.md)
 
 ## What it does
 
@@ -43,12 +43,12 @@ This is a **compiler toolchain**, not an application runtime. The entry point ta
 | Requirement | Selection |
 | --- | --- |
 | Mac | Apple Silicon; native `arm64` tools |
-| Python | **3.9+**; tested with **3.12.14** |
-| Mono and `mcs` | Native ARM64 **6.14.1** |
+| Python | **3.9+**; earlier release tested with **3.12.14**, compatibility update with **3.15.0** |
+| Mono and `mcs` | Native ARM64; **6.14.1** tested, other builds assessed by helper builds and local tests |
 | Native compiler | Apple Clang / Xcode Command Line Tools |
-| Mono.Cecil | **0.11.1.0**, normally included with Mono |
-| Microsoft compiler | `Microsoft.Dynamics.AX.Platform.CompilerPackage` **7.0.8199.55**, exact pinned contents |
-| SDK references | Platform BuildXpp **7.0.8199.55** and ApplicationSuite BuildXpp **10.0.2790.83** for the smoke profile |
+| Mono.Cecil | Compatible API; **0.11.1.0** tested, discovered beside Mono or selected explicitly |
+| Microsoft compiler | Your `Microsoft.Dynamics.AX.Platform.CompilerPackage`; must pass patch inspection and local tests |
+| SDK references | Your matching BuildXpp packages; an optional exact profile reproduces the qualified release |
 | Target API definitions | .NET Framework **4.8**, reference-pack NuGet **1.0.3**; prepared by the helper |
 
 The [setup guide](docs/setup.md) covers obtaining packages, directory layout, offline setup, and tool selection. The scripts do not install or upgrade system software.
@@ -72,11 +72,13 @@ python3 tools/team_setup.py from-packages \
   --sdk /path/to/sdk-packages
 ```
 
-Choose one route. Both prepare **368 framework files** and **265 exact model
-reference files**, build the helpers, and install into `.local/toolchain`.
-Four public NuGet downloads are SHA-256 pinned. Host tools are not installed.
+Choose one route. Both prepare the target framework and your supplied SDK
+references, build the helpers, and install into `.local/toolchain`. Use `--model`
+to limit SDK modules, or `--reference-profile qualified` to reproduce the small
+265-file qualified profile. Four public NuGet downloads remain locked to the
+selected target API dependencies. Host tools are not installed.
 
-Installation checks all **224 original package files**, builds the C#/C helpers, adapts a separate compiler copy, and runs six compiler fixtures plus framework/native checks. Two fixtures deliberately contain invalid source: their expected diagnostic failures count as passing tests. `--strict-references` rejects unresolved external-reference diagnostics in the fixtures.
+Installation records your input hashes, checks **25 sensitive method contracts** and signature-checked ETW adaptations, builds the C#/C helpers, adapts a separate compiler copy, and always runs six compiler fixtures plus framework/native checks. Two fixtures deliberately contain invalid source: their expected diagnostic failures count as passing tests. `--strict-references` rejects unresolved external-reference diagnostics in the fixtures.
 
 Have an approved team bundle instead? [Install it offline with one command](docs/team-setup.md#teammate-install-the-bundle).
 For manual dependency preparation, custom tool paths and larger reference sets,
@@ -116,10 +118,10 @@ The compiler's core is managed **.NET IL**. **Mono** executes those instructions
 | Source | Purpose |
 | --- | --- |
 | `tools/team_setup.py`, `package_inputs.py` | Import Microsoft packages, create/verify private input bundles and run setup |
-| `tools/restore_microsoft.py`, `microsoft-packages.json` | Restore exact versions through your existing authorized NuGet feed |
+| `tools/restore_microsoft.py`, `microsoft_inputs.py` | Restore caller-selected versions through your existing authorized NuGet feed |
 | `tools/prepare_dependencies.py` | Stage locked target references from public downloads and supplied SDKs |
 | `install.py` | Verify inputs, build helpers, create the private installation |
-| `src/Port.cs` | Check compiler instruction shapes and apply IL adaptations |
+| `src/Port.cs`, `PatchContracts.cs`, `profiles/patch-contracts.json` | Inspect method contracts, check instruction shapes and apply IL adaptations |
 | `src/Compatibility.cs`, `HostReflectionResolver.cs` | Host reflection and platform compatibility |
 | `src/FrameworkResolver.cs`, `FrameworkTypeResolver.cs` | Resolve target framework identities and types |
 | `src/compat.c` | Native macOS access and physical-memory probes |
@@ -139,10 +141,10 @@ python3 tools/check_public_tree.py
 
 GitHub Actions runs these checks. Real compiler verification requires your licensed inputs and runs automatically through team setup, or explicitly through `install.py --verify`. Independently supplied Windows outputs can additionally enable structural artifact and diagnostic comparison. [Test guide →](docs/validation.md) · [Release verification →](reports/release-validation.json)
 
-The team setup update passed **23 public tests** and fresh installations through
-both existing-package and offline-bundle routes, with all six compiler fixtures
-passing in each. Live private-feed authentication was not exercised.
-[Team setup verification →](reports/team-setup-validation.json)
+Historical release results remain dated records. The compatibility update adds
+controlled binary-change tests: an unrelated change can proceed, while a changed
+sensitive patch method is rejected. These variants are not additional Microsoft
+releases. [Compatibility checks →](docs/compatibility.md#verification-and-current-evidence)
 
 ## License and authorship
 

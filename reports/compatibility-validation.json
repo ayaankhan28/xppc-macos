@@ -1,0 +1,349 @@
+{
+  "format": "xpp-compatibility-validation-v1",
+  "date_utc": "2026-10-15",
+  "result": "passed",
+  "host": {
+    "system": "Darwin",
+    "macos": "27.0.1",
+    "architecture": "arm64",
+    "python": "3.15.0",
+    "mono": "6.14.1",
+    "cecil": "0.11.1.0"
+  },
+  "public_python_tests": {
+    "passed": 30
+  },
+  "qualified_microsoft_release": "7.0.8199.55",
+  "sensitive_method_contracts": 25,
+  "generic_etw_methods_in_baseline": 424,
+  "compiler_runs": {
+    "qualified_baseline": {
+      "compiler_version": "7.0.8199.55",
+      "qualified_compiler_inputs": true,
+      "strict_references": true,
+      "fixtures": [
+        {
+          "model": "ReaLab",
+          "pass": true,
+          "exit": 0,
+          "errors": 0,
+          "warnings": 0,
+          "external_reference_warnings": 0,
+          "elapsed_seconds": 2.248602750012651,
+          "cpu_seconds": 2.67041,
+          "peak_rss_bytes": 618971136
+        },
+        {
+          "model": "ReaOracle",
+          "pass": true,
+          "exit": 0,
+          "errors": 0,
+          "warnings": 0,
+          "external_reference_warnings": 0,
+          "elapsed_seconds": 1.6448303329525515,
+          "cpu_seconds": 2.115071,
+          "peak_rss_bytes": 424050688
+        },
+        {
+          "model": "ReaOraclePlatform",
+          "pass": true,
+          "exit": 0,
+          "errors": 0,
+          "warnings": 1,
+          "external_reference_warnings": 0,
+          "elapsed_seconds": 2.0016050839913078,
+          "cpu_seconds": 2.948685,
+          "peak_rss_bytes": 636026880
+        },
+        {
+          "model": "ReaOracleSyntax",
+          "pass": true,
+          "exit": 2,
+          "errors": 2,
+          "warnings": 0,
+          "external_reference_warnings": 0,
+          "elapsed_seconds": 1.7274653749773279,
+          "cpu_seconds": 2.3900409999999996,
+          "peak_rss_bytes": 583532544
+        },
+        {
+          "model": "ReaOracleType",
+          "pass": true,
+          "exit": 1,
+          "errors": 1,
+          "warnings": 0,
+          "external_reference_warnings": 0,
+          "elapsed_seconds": 1.785537917050533,
+          "cpu_seconds": 2.4228989999999997,
+          "peak_rss_bytes": 591282176
+        },
+        {
+          "model": "ReaOracleConsumer",
+          "pass": true,
+          "exit": 0,
+          "errors": 0,
+          "warnings": 0,
+          "external_reference_warnings": 0,
+          "elapsed_seconds": 1.599570041988045,
+          "cpu_seconds": 1.901592,
+          "peak_rss_bytes": 398131200
+        }
+      ],
+      "windows_comparison_run": true,
+      "windows_artifact_comparison": {
+        "ReaLab": {
+          "result": "all-differences-classified",
+          "counts": {
+            "canonical-cil-equal": 3,
+            "excluded-pdb": 3,
+            "identical": 89,
+            "formatting-or-map-order-only": 1,
+            "canonical-cil-equal-except-verified-link-hashes": 1,
+            "archive-order-only": 1
+          },
+          "linked_file_hashes_valid": true
+        },
+        "ReaOracle": {
+          "result": "all-differences-classified",
+          "counts": {
+            "canonical-cil-equal": 3,
+            "excluded-pdb": 3,
+            "identical": 89,
+            "formatting-or-map-order-only": 1,
+            "canonical-cil-equal-except-verified-link-hashes": 1,
+            "archive-order-only": 1
+          },
+          "linked_file_hashes_valid": true
+        },
+        "ReaOraclePlatform": {
+          "result": "all-differences-classified",
+          "counts": {
+            "canonical-cil-equal": 4,
+            "excluded-pdb": 4,
+            "identical": 89,
+            "formatting-or-map-order-only": 1,
+            "canonical-cil-equal-except-verified-link-hashes": 1,
+            "archive-order-only": 1
+          },
+          "linked_file_hashes_valid": true
+        },
+        "ReaOracleConsumer": {
+          "result": "all-differences-classified",
+          "counts": {
+            "canonical-cil-equal": 4,
+            "excluded-pdb": 3,
+            "identical": 91
+          },
+          "linked_file_hashes_valid": true
+        }
+      },
+      "windows_diagnostics_equal": {
+        "ReaLab": true,
+        "ReaOracle": true,
+        "ReaOraclePlatform": true,
+        "ReaOracleSyntax": true,
+        "ReaOracleType": true,
+        "ReaOracleConsumer": true
+      },
+      "core_types": 1098,
+      "nested_core_types": 69,
+      "framework_cases": 15,
+      "native_checks": true,
+      "source_inputs_unchanged": true,
+      "original_compiler_unchanged": true
+    },
+    "controlled_variant": {
+      "compiler_version": "0.0.0-local-compatibility-test",
+      "qualified_compiler_inputs": false,
+      "strict_references": true,
+      "fixtures": [
+        {
+          "model": "ReaLab",
+          "pass": true,
+          "exit": 0,
+          "errors": 0,
+          "warnings": 0,
+          "external_reference_warnings": 0,
+          "elapsed_seconds": 2.1794210000080056,
+          "cpu_seconds": 2.529156,
+          "peak_rss_bytes": 614825984
+        },
+        {
+          "model": "ReaOracle",
+          "pass": true,
+          "exit": 0,
+          "errors": 0,
+          "warnings": 0,
+          "external_reference_warnings": 0,
+          "elapsed_seconds": 1.531342083006166,
+          "cpu_seconds": 1.98143,
+          "peak_rss_bytes": 426704896
+        },
+        {
+          "model": "ReaOraclePlatform",
+          "pass": true,
+          "exit": 0,
+          "errors": 0,
+          "warnings": 1,
+          "external_reference_warnings": 0,
+          "elapsed_seconds": 1.8999819579767063,
+          "cpu_seconds": 2.854526,
+          "peak_rss_bytes": 634355712
+        },
+        {
+          "model": "ReaOracleSyntax",
+          "pass": true,
+          "exit": 2,
+          "errors": 2,
+          "warnings": 0,
+          "external_reference_warnings": 0,
+          "elapsed_seconds": 1.6256600000197068,
+          "cpu_seconds": 2.244834,
+          "peak_rss_bytes": 581926912
+        },
+        {
+          "model": "ReaOracleType",
+          "pass": true,
+          "exit": 1,
+          "errors": 1,
+          "warnings": 0,
+          "external_reference_warnings": 0,
+          "elapsed_seconds": 1.6795209999545477,
+          "cpu_seconds": 2.27785,
+          "peak_rss_bytes": 587776000
+        },
+        {
+          "model": "ReaOracleConsumer",
+          "pass": true,
+          "exit": 0,
+          "errors": 0,
+          "warnings": 0,
+          "external_reference_warnings": 0,
+          "elapsed_seconds": 1.6059428330045193,
+          "cpu_seconds": 1.893278,
+          "peak_rss_bytes": 399228928
+        }
+      ],
+      "windows_comparison_run": false,
+      "windows_artifact_comparison": {},
+      "windows_diagnostics_equal": {},
+      "core_types": 1098,
+      "nested_core_types": 69,
+      "framework_cases": 15,
+      "native_checks": true,
+      "source_inputs_unchanged": true,
+      "original_compiler_unchanged": true
+    },
+    "supplied_sdk_route": {
+      "compiler_version": "7.0.8199.55",
+      "qualified_compiler_inputs": true,
+      "strict_references": true,
+      "fixtures": [
+        {
+          "model": "ReaLab",
+          "pass": true,
+          "exit": 0,
+          "errors": 0,
+          "warnings": 0,
+          "external_reference_warnings": 0,
+          "elapsed_seconds": 2.1165569170261733,
+          "cpu_seconds": 2.462955,
+          "peak_rss_bytes": 612581376
+        },
+        {
+          "model": "ReaOracle",
+          "pass": true,
+          "exit": 0,
+          "errors": 0,
+          "warnings": 0,
+          "external_reference_warnings": 0,
+          "elapsed_seconds": 1.5111649580067024,
+          "cpu_seconds": 1.956994,
+          "peak_rss_bytes": 426737664
+        },
+        {
+          "model": "ReaOraclePlatform",
+          "pass": true,
+          "exit": 0,
+          "errors": 0,
+          "warnings": 1,
+          "external_reference_warnings": 0,
+          "elapsed_seconds": 1.8336825839942321,
+          "cpu_seconds": 2.7441709999999997,
+          "peak_rss_bytes": 638074880
+        },
+        {
+          "model": "ReaOracleSyntax",
+          "pass": true,
+          "exit": 2,
+          "errors": 2,
+          "warnings": 0,
+          "external_reference_warnings": 0,
+          "elapsed_seconds": 1.6222107909852639,
+          "cpu_seconds": 2.242527,
+          "peak_rss_bytes": 583335936
+        },
+        {
+          "model": "ReaOracleType",
+          "pass": true,
+          "exit": 1,
+          "errors": 1,
+          "warnings": 0,
+          "external_reference_warnings": 0,
+          "elapsed_seconds": 1.667452041991055,
+          "cpu_seconds": 2.249355,
+          "peak_rss_bytes": 587333632
+        },
+        {
+          "model": "ReaOracleConsumer",
+          "pass": true,
+          "exit": 0,
+          "errors": 0,
+          "warnings": 0,
+          "external_reference_warnings": 0,
+          "elapsed_seconds": 1.4356259159976617,
+          "cpu_seconds": 1.736252,
+          "peak_rss_bytes": 397967360
+        }
+      ],
+      "windows_comparison_run": false,
+      "windows_artifact_comparison": {},
+      "windows_diagnostics_equal": {},
+      "core_types": 1098,
+      "nested_core_types": 69,
+      "framework_cases": 15,
+      "native_checks": true,
+      "source_inputs_unchanged": true,
+      "original_compiler_unchanged": true
+    }
+  },
+  "controlled_variants": {
+    "unrelated": {
+      "change": "Entry point no-op, new MVID, synthetic NuGet version 0.0.0-local-compatibility-test, ignored Finder metadata",
+      "inspection": "accepted",
+      "full_installation": "passed"
+    },
+    "sensitive": {
+      "change": "ValidateParameters no-op and new MVID",
+      "inspection": "rejected with method-specific contract report",
+      "installation_attempted": false
+    }
+  },
+  "public_downloads": "Four locked public NuGet archives downloaded and verified through supplied-SDK setup.",
+  "package_selection_tests": "Synthetic NuGet versions, ambiguity, explicit restore versions and v1/v2 bundle round trips.",
+  "limitations": [
+    "Only one genuine Microsoft compiler release was available and qualified.",
+    "Controlled variants are mechanism tests, not independent Microsoft releases.",
+    "No other Mono/Cecil version, Intel host or other macOS release was tested.",
+    "The supplied-SDK route used existing prepared baseline references without an exact profile gate; no different SDK release was qualified.",
+    "Private-feed authentication was not exercised.",
+    "Generated application code was not executed; Windows PDBs remain unavailable."
+  ],
+  "measurement_scope": "Per-build compiler child wall time, CPU and peak RSS only. Filesystem cache uncontrolled; some install workflows ran concurrently. No before/after speed comparison. Installer/probe cost, process-family memory and agent tokens were not measured.",
+  "real_bundle_v2_roundtrip": {
+    "passed": true,
+    "compiler_version": "0.0.0-local-compatibility-test",
+    "files": 863,
+    "comparison": "Extracted compiler/framework/reference inventories equal their selected sources; synthetic identity retained."
+  }
+}

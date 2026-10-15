@@ -11,9 +11,11 @@ and authentication configuration outside tracked files. Package acquisition and
 distribution documentation must distinguish verified content hashes from
 package signatures, access rights and redistribution terms.
 
-Preserve original SDK inputs. Adapt a new installation, validate package hashes,
-and keep diagnostics and access checks active. A new Microsoft compiler version
-needs its own investigated recipe and validation; do not bypass the version gate.
+Preserve original SDK inputs. Adapt a new installation, record and verify input hashes,
+and keep diagnostics and access checks active. A different compiler version may
+reuse a recipe when its method contracts and local tests pass. Changed sensitive
+methods need an investigated contract variant or recipe change and validation;
+do not add a digest merely to bypass an incompatibility. See [extending support](docs/compatibility.md#extending-a-patch-recipe).
 
 Run the public Python tests and the source publication check described in the
 README. Compiler-related changes also need actual `--verify` builds on Apple

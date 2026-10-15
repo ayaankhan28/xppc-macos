@@ -22,7 +22,7 @@ and [team setup](docs/team-setup.md).
 
 | External component | Role | Upstream source |
 | --- | --- | --- |
-| Microsoft Dynamics AX CompilerPackage | Original X++ compiler; exact supported package required | [Microsoft build packages](https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/dev-tools/hosted-build-automation) |
+| Microsoft Dynamics AX CompilerPackage | Original X++ compiler; compatible user-supplied package required | [Microsoft build packages](https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/dev-tools/hosted-build-automation) |
 | Microsoft Dynamics BuildXpp packages | Model metadata and compilation references | Same Microsoft package documentation |
 | Microsoft.NETFramework.ReferenceAssemblies.net48 | Target framework API definitions | [NuGet 1.0.3](https://www.nuget.org/packages/Microsoft.NETFramework.ReferenceAssemblies.net48/1.0.3) |
 | Mono | Managed runtime and C# compiler | [Mono](https://www.mono-project.com/) |

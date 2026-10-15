@@ -5,9 +5,9 @@ The package names, versions and acquisition guide are also machine-readable in
 framework dependencies have separate fixed download URLs and SHA-256 values in
 [`tools/dependency-lock.json`](../tools/dependency-lock.json).
 
-## Exact inputs for the tested setup
+## Qualified baseline and selectable versions
 
-| Package | Required version | Microsoft asset label |
+| Package | Qualified baseline version | Microsoft asset label |
 | --- | --- | --- |
 | `Microsoft.Dynamics.AX.Platform.CompilerPackage` | `7.0.8199.55` | Compiler Tools |
 | `Microsoft.Dynamics.AX.Platform.DevALM.BuildXpp` | `7.0.8199.55` | Platform Build Reference |
@@ -35,8 +35,9 @@ target environment; the default setup does not restore them implicitly.
 These Dynamics packages are not public nuget.org downloads. This project has
 no universal anonymous URL or account-independent LCS download token to supply.
 If your account cannot access the matching versions, request them from your
-organization's package administrator. Do not substitute a newer compiler or
-change the pinned hash inventory to bypass the compatibility checks.
+organization's package administrator. Other builds can go through the
+[compatibility inspection](compatibility.md). Do not change the qualified hash
+inventory to pretend an unfamiliar build has been independently qualified.
 
 After downloading, no Windows extraction step is needed:
 
@@ -85,11 +86,13 @@ python3 tools/team_setup.py from-packages \
   --package-directory .local/microsoft-downloads
 ```
 
-The restore command explicitly selects all three pinned versions, saves their
-`.nupkg` archives, and disables implicit dependency-version selection. The
-importer validates the compiler's exact extracted inventory; dependency
-preparation validates selected SDK reference bytes. A version-matched package
-with different selected content fails these checks.
+The defaults reproduce the versions in the table. Add `--compiler-version`,
+`--platform-version` and `--application-version` to select your own exact
+versions. Select the matching SDK versions explicitly; application and platform
+version numbers use different series. The script saves original `.nupkg`
+archives and disables implicit dependency-version selection. The importer
+accepts supplied versions; the installer decides patch compatibility and
+requires local compile tests. Hashes preserve input identity and integrity.
 
 For an administrator publishing the original compiler archive, Microsoft's
 documented command has this form:

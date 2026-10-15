@@ -40,9 +40,9 @@ Use a new output directory and an ordinary user account; running as root would i
 | `ReaOracleType` | Exit 1, expected diagnostic | Invalid type conversion |
 | `ReaOracleConsumer` | Success | Dependency on separately compiled `ReaOracle` |
 
-Verification also checks source preservation, rejection of stale output, **1,098 selected core types including 69 nested types**, **15 framework identity/shape cases**, and native memory/directory access. `--strict-references` fails if a fixture emits external-reference diagnostics. Other warnings remain in the report.
+Verification also checks source preservation, rejection of stale output, **1,098 selected core types including 69 nested types for the qualified input**, **15 framework identity/shape cases**, and native memory/directory access. `--strict-references` fails if a fixture emits external-reference diagnostics. Other warnings remain in the report.
 
-The default core-type check validates the pinned counts and uniqueness. It does not claim equality to an independently supplied Windows enumeration unless `--core-type-baseline PATH` is also provided.
+The core-type check validates unique names and valid unique TypeDef tokens. Exact counts are additionally checked for the qualified compiler input; other accepted builds record their actual counts. It does not claim equality to an independently supplied Windows enumeration unless `--core-type-baseline PATH` is also provided.
 
 ## Optional Windows comparison
 
@@ -72,6 +72,6 @@ Private Windows outputs are not shipped. Without your baseline, the new installa
 
 ## Limits and measurements
 
-The compiler package, Mono architecture/version and reference selections are pinned. Other compiler/SDK combinations, Intel Macs, Windows PDBs and broad application runtime behavior are unqualified.
+The qualified compiler release remains 7.0.8199.55. Other compiler/SDK combinations may pass local compatibility and fixture checks without being independently qualified. Mono must be native ARM64, but its version is no longer an equality gate. Intel Macs, Windows PDBs and broad application runtime behavior are unqualified. See [compatibility verification](compatibility.md#verification-and-current-evidence).
 
 Each build reports one compiler child's elapsed time, CPU time and peak RSS. These exclude launcher copy/hash work; filesystem cache state is uncontrolled. They are neither process-family memory measurements nor a machine RAM minimum. The `doctor` command documents optional target-pack entries unavailable in the selected reference package.

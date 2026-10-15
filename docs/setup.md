@@ -1,6 +1,6 @@
 # Setup and everyday use
 
-This guide reproduces the pinned Apple Silicon compiler installation. Keep proprietary inputs and generated output in `.local/` or outside the checkout. They are excluded from Git.
+This guide installs a compatible compiler on Apple Silicon and describes how to reproduce the qualified reference profile. Keep proprietary inputs and generated output in `.local/` or outside the checkout. They are excluded from Git.
 
 For one-command setup from `.nupkg` files, existing folders or an authorized
 private bundle, start with [team setup](team-setup.md). For direct package
@@ -19,25 +19,25 @@ mcs --version
 clang --version
 ```
 
-`uname -m` and Mono's architecture must report `arm64`. The installer requires Mono **6.14.1**; Python **3.9+** is needed by the source tooling. Release verification used Python **3.12.14** on macOS **27.0.1**, with Apple Clang **21.0.0**. Other macOS releases and Intel Macs have not been qualified by this release.
+`uname -m` and Mono's architecture must report `arm64`. Mono **6.14.1** is the tested baseline; other native ARM64 builds must build the helpers and pass installation tests; Python **3.9+** is needed by the source tooling. The earlier release used Python **3.12.14**; the compatibility update used **3.15.0**, on macOS **27.0.1** with Apple Clang **21.0.0**. Other macOS releases and Intel Macs have not been qualified by this release.
 
-If Command Line Tools are missing, Apple's installer is available with `xcode-select --install`. If you use Homebrew, its [Mono formula](https://formulae.brew.sh/formula/mono) supplies Mono and `mcs`; check the selected version and ARM64 architecture after installation. `brew install mono` can be used when that formula supplies the pinned version. A future formula version is not automatically supported. The scripts do not install Homebrew, Mono, Python, or unrelated system software.
+If Command Line Tools are missing, Apple's installer is available with `xcode-select --install`. If you use Homebrew, its [Mono formula](https://formulae.brew.sh/formula/mono) supplies Mono and `mcs`; check the selected version and ARM64 architecture after installation. `brew install mono` installs the available formula. Its selected build must pass the local tests; the installer no longer rejects it solely for having a different version number. The scripts do not install Homebrew, Mono, Python, or unrelated system software.
 
-Mono.Cecil **0.11.1.0** is normally under the selected Mono prefix at `lib/mono/gac/Mono.Cecil/0.11.1.0__*/Mono.Cecil.dll`. Discovery follows the resolved Mono executable. For another layout, provide `--cecil /path/to/Mono.Cecil.dll`. Installer options also allow `--mono`, `--mcs`, and `--clang` paths. Keep `mcs` paired with the selected Mono distribution.
+Mono.Cecil **0.11.1.0** is the tested baseline. Discovery selects the highest uniquely installed numeric Cecil version under the resolved Mono prefix at `lib/mono/gac/Mono.Cecil/*/Mono.Cecil.dll`. Helper compilation checks the required API. For another layout, provide `--cecil /path/to/Mono.Cecil.dll`. Installer options also allow `--mono`, `--mcs`, and `--clang` paths. Keep `mcs` paired with the selected Mono distribution.
 
 ## 2. Acquire and extract Microsoft packages
 
 Microsoft documents Dynamics compiler and BuildXpp package acquisition through LCS and its Visual Studio extension. Follow its [build automation guidance](https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/dev-tools/hosted-build-automation) or [unified developer guidance](https://learn.microsoft.com/en-us/power-platform/developer/unified-experience/finance-operations-pipelines) using your authorized access. Access and availability depend on your Microsoft setup.
 
-This recipe requires these exact selections:
+These are the qualified baseline selections. Other compiler builds go through [method compatibility checks](compatibility.md); choose SDKs appropriate to your compiler and target:
 
 | Package | Version | Needed for |
 | --- | --- | --- |
-| `Microsoft.Dynamics.AX.Platform.CompilerPackage` | `7.0.8199.55` | Every installation |
+| `Microsoft.Dynamics.AX.Platform.CompilerPackage` | `7.0.8199.55` | Qualified compiler baseline |
 | `Microsoft.Dynamics.AX.Platform.DevALM.BuildXpp` | `7.0.8199.55` | Smoke profile and platform model references |
 | `Microsoft.Dynamics.AX.ApplicationSuite.DevALM.BuildXpp` | `10.0.2790.83` | Two managed dependencies in the exact smoke profile |
 
-Extract packages into separate directories. Do not mix versions or add local files inside the compiler package. Point `--compiler-package` at the directory containing `xppc.exe`, `xppc.exe.config`, and the matching compiler DLLs. The required 224-file inventory is in [`original-package-sha256.json`](../original-package-sha256.json); the original `xppc.exe` SHA-256 is `cd56f1c5a8565cafc1f935e25ba0cc29dd68176fe7e0db6dbabf0d781f6d2159`. Unknown bytes, extra files and missing files are rejected.
+Extract packages into separate directories. Do not mix files from different compiler packages. Incidental Finder `.DS_Store` files are ignored; selected content hashes are recorded. Point `--compiler-package` at the directory containing `xppc.exe`, `xppc.exe.config`, and the matching compiler DLLs. The required 224-file inventory is in [`original-package-sha256.json`](../original-package-sha256.json); the original `xppc.exe` SHA-256 is `cd56f1c5a8565cafc1f935e25ba0cc29dd68176fe7e0db6dbabf0d781f6d2159`. Unknown bytes, extra files and missing files are rejected.
 
 Expected SDK collection:
 
@@ -95,7 +95,7 @@ Alternatively pass explicit `--framework-nupkg`, `--graph-nupkg`, `--edm-nupkg`,
 
 For a model that needs more SDK packages, either use those `ref/net40` roots directly at compile time, or omit `--profile-manifest` and `--search-directory` to merge supplied BuildXpp model/bin trees. `--model MODEL` can restrict that merge and is repeatable. Explicit extra managed DLLs can be supplied with `--managed-reference PATH`.
 
-The merger refuses differing bytes at a shared case-insensitive destination; it does not silently choose one version. A broad merge can therefore fail where a model-specific selection or separate reference roots are appropriate. The exact small profile is the reproducible path for the shipped verification fixtures.
+The merger refuses differing bytes at a shared case-insensitive destination; it does not silently choose one version. A broad merge can therefore fail where a model-specific selection or separate reference roots are appropriate. The exact small profile reproduces the historical qualification. Team setup defaults to supplied SDK contents; a different SDK is not rejected solely because its bytes differ from that profile.
 
 ## 4. Build the compatibility layer
 
@@ -112,7 +112,7 @@ The installer builds a native `.dylib` and managed helper `.dll`/`.exe` files, c
 
 Use a fresh destination when recipe or inputs change. A partial failed installation is retained for diagnosis. Inside the source checkout, private installations must be under `.local/`. You can place them in another nonoverlapping external directory instead.
 
-`--verify` runs real compiler fixtures without private Windows results. `--strict-references` additionally rejects external-reference diagnostics; it is appropriate for the exact smoke profile. Framework-pack issues printed by `doctor` are a different check, described below.
+Every new installation runs real compiler fixtures without requiring private Windows results. `--verify` reruns them on an existing unchanged installation. `--strict-references` additionally rejects external-reference diagnostics; it is appropriate for the exact smoke profile. Framework-pack issues printed by `doctor` are a different check, described below.
 
 Check integrity later with:
 

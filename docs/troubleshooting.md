@@ -10,9 +10,9 @@ For a failed build, retain its `request.json`, `result.json` and compiler diagno
 
 ## Compiler package or installation does not match
 
-The installer requires the exact compiler package inventory pinned in `original-package-sha256.json`, including file names and SHA-256 values. A matching displayed version is insufficient when bytes differ. Missing, changed or extra files cause rejection.
+Run `python3 install.py --compiler-package /path/to/package --check-compatibility`. Its JSON report identifies changed sensitive methods or patch-shape failures. The displayed compiler version alone neither admits nor rejects a build. `original-package-sha256.json` labels the known qualified input; it is no longer the installation allowlist.
 
-Select the unmodified, matching package you obtained through your own authorized Microsoft access. Do not edit the hash list to force a different package through the patcher. Supporting another package requires inspecting its call-site shapes and repeating the relevant qualification.
+Use an intact package from your authorized source. If a sensitive method changed, its adaptation needs review and tests. Do not add the observed digest to the contract merely to suppress the error. See [extending support](compatibility.md#extending-a-patch-recipe).
 
 If `doctor` reports a changed installed runtime, framework or default references, preserve that installation for diagnosis and install from the intended inputs into a new destination. An installation created from a different recipe/input selection is not updated in place. A partial failed installation also remains available for diagnosis.
 

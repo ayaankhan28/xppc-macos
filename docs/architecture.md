@@ -6,13 +6,13 @@ Microsoft's compiler still parses X++, checks types and emits CIL and model meta
 
 ## Installation
 
-1. Supply the exact original compiler package and matching SDK references.
-2. Prepare target references using pinned public downloads and a hash-based model profile.
-3. The installer checks all original package hashes and builds the compatibility helpers from C# and C.
-4. `Port.cs` uses Mono.Cecil to check expected types, methods and instruction shapes, then writes adapted assemblies into a separate private installation.
-5. The launcher verifies the installation and runs the compiler in a new Mono process.
+1. Supply your original compiler package and matching SDK references.
+2. Prepare target references from public downloads and supplied SDK contents (or the optional exact qualified profile).
+3. The installer records input hashes, builds inspection helpers and checks relevant methods without executing the Microsoft compiler.
+4. `Port.cs` and `PatchContracts.cs` use Mono.Cecil to check method contracts and instruction shapes, then write adapted assemblies into a separate private installation.
+5. Real compiler, framework and native tests must pass before the installation becomes usable. The launcher verifies the installation and runs the compiler in a new Mono process.
 
-Original compiler inputs remain unchanged. Unknown package bytes and changed patch-site shapes are rejected. A manifest records source recipe, original package, runtime, framework, references and selected Mono executable hashes. Changed inputs require a new installation rather than an in-place overwrite.
+Original compiler inputs remain unchanged. Unfamiliar whole-package bytes can pass when relevant method contracts match. Changed sensitive methods or unsupported patch-site shapes are rejected with a report. A manifest records source recipe, original package, runtime, framework, references and selected Mono executable hashes. Changed inputs require a new installation rather than an in-place overwrite. The [compatibility design](compatibility.md) separates content integrity from build eligibility.
 
 ## Host and target are separate
 
