@@ -1,6 +1,6 @@
 <div align="center">
 
-# X++ Compiler Port
+# X++ Compiler for macOS
 
 ### Compile native X++ models on Apple Silicon macOS.
 
@@ -50,8 +50,8 @@ The [setup guide](docs/setup.md) covers obtaining packages, directory layout, of
 ### 2. Clone and prepare references
 
 ```sh
-git clone https://github.com/ayaankhan28/Xpp-Compiler-Port.git
-cd Xpp-Compiler-Port
+git clone https://github.com/ayaankhan28/xppc-macos.git
+cd xppc-macos
 
 # Set the locations of your extracted Microsoft packages.
 XPPC_COMPILER="/path/to/Microsoft.Dynamics.AX.Platform.CompilerPackage"
