@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+<Name>ReaOracleDerived</Name>
+<SourceCode><Declaration><![CDATA[
+public class ReaOracleDerived extends ReaOracleBase
+{
+}
+]]></Declaration><Methods>
+<Method><Name>new</Name><Source><![CDATA[
+public void new(int _seed)
+{
+    super(_seed);
+}
+]]></Source></Method>
+<Method><Name>compute</Name><Source><![CDATA[
+public int compute(int _input)
+{
+    return super(_input) * 2;
+}
+]]></Source></Method>
+<Method><Name>dispatch</Name><Source><![CDATA[
+public static int dispatch()
+{
+    ReaOracleBase instance = new ReaOracleDerived(3);
+    return instance.compute(4);
+}
+]]></Source></Method>
+</Methods></SourceCode>
+</AxClass>

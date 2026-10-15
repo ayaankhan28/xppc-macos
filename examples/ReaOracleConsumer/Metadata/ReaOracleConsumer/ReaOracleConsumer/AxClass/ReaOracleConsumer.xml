@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+<Name>ReaOracleConsumer</Name>
+<SourceCode><Declaration><![CDATA[
+public class ReaOracleConsumer
+{
+}
+]]></Declaration><Methods>
+<Method><Name>fromDependency</Name><Source><![CDATA[
+public static int fromDependency()
+{
+    return ReaOracleDerived::dispatch();
+}
+]]></Source></Method>
+</Methods></SourceCode>
+</AxClass>

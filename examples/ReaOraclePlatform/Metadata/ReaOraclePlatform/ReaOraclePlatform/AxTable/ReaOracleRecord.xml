@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxTable xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>ReaOracleRecord</Name>
+  <SourceCode><Declaration><![CDATA[public class ReaOracleRecord extends common { }]]></Declaration><Methods/></SourceCode>
+  <Label>Oracle record</Label>
+  <TableType>InMemory</TableType>
+  <Fields><AxTableField i:type="AxTableFieldInt"><Name>Quantity</Name><Label>Quantity</Label></AxTableField></Fields>
+  <FieldGroups/><Indexes/><Relations/>
+</AxTable>

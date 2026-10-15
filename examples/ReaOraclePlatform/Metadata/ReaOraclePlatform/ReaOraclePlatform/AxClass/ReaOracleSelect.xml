@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+<Name>ReaOracleSelect</Name>
+<SourceCode><Declaration><![CDATA[
+public class ReaOracleSelect
+{
+}
+]]></Declaration><Methods>
+<Method><Name>findQuantity</Name><Source><![CDATA[
+public static int findQuantity(int _minimum)
+{
+    ReaOracleRecord row;
+    select firstonly Quantity from row
+        where row.Quantity >= _minimum;
+    return row.Quantity;
+}
+]]></Source></Method>
+</Methods></SourceCode>
+</AxClass>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>ReaLoop</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+public class ReaLoop
+{
+    int counter;
+    str label;
+    container items;
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>new</Name>
+				<Source><![CDATA[
+    public void new(str _label)
+    {
+        label = _label;
+        counter = 0;
+        items = conNull();
+    }
+]]></Source>
+			</Method>
+			<Method>
+				<Name>countTo</Name>
+				<Source><![CDATA[
+    public int countTo(int _limit)
+    {
+        int i;
+        for (i = 1; i <= _limit; i++)
+        {
+            if (i mod 2 == 0)
+            {
+                counter += i;
+            }
+            else
+            {
+                items = conIns(items, conLen(items) + 1, i);
+            }
+        }
+        while (counter > 100)
+        {
+            counter = counter div 2;
+        }
+        return counter;
+    }
+]]></Source>
+			</Method>
+			<Method>
+				<Name>describe</Name>
+				<Source><![CDATA[
+    public str describe()
+    {
+        return ReaHello::greet(label) + ' / ' + int2Str(conLen(items));
+    }
+]]></Source>
+			</Method>
+			<Method>
+				<Name>construct</Name>
+				<Source><![CDATA[
+    public static ReaLoop construct(str _label)
+    {
+        ReaLoop loop = new ReaLoop(_label);
+        return loop;
+    }
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

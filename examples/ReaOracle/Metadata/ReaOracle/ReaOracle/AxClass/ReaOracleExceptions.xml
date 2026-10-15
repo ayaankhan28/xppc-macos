@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+<Name>ReaOracleExceptions</Name>
+<SourceCode><Declaration><![CDATA[
+public class ReaOracleExceptions
+{
+}
+]]></Declaration><Methods>
+<Method><Name>guarded</Name><Source><![CDATA[
+public static int guarded(boolean _fail)
+{
+    int result = 0;
+    try
+    {
+        if (_fail)
+        {
+            throw Exception::Error;
+        }
+        result = 11;
+    }
+    catch (Exception::Error)
+    {
+        result = 7;
+    }
+    finally
+    {
+        result += 1;
+    }
+    return result;
+}
+]]></Source></Method>
+</Methods></SourceCode>
+</AxClass>

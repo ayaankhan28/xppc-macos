@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+<Name>ReaOracleFeatures</Name>
+<SourceCode><Declaration><![CDATA[
+public class ReaOracleFeatures
+{
+    #define.Answer(42)
+}
+]]></Declaration><Methods>
+<Method><Name>macroValue</Name><Source><![CDATA[
+public static int macroValue()
+{
+    return #Answer;
+}
+]]></Source></Method>
+<Method><Name>choose</Name><Source><![CDATA[
+public static int choose(int _input)
+{
+    switch (_input)
+    {
+        case 0:
+            return 10;
+        case 1:
+        case 2:
+            return 20;
+        default:
+            return -1;
+    }
+}
+]]></Source></Method>
+<Method><Name>containerValue</Name><Source><![CDATA[
+public static int containerValue()
+{
+    container values = [3, 5];
+    int first;
+    int second;
+    values = conIns(values, 2, 4);
+    values = conDel(values, 1, 1);
+    first = conPeek(values, 1);
+    second = conPeek(values, 2);
+    return first + second + conLen(values);
+}
+]]></Source></Method>
+</Methods></SourceCode>
+</AxClass>

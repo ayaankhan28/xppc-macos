@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxForm xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="Microsoft.Dynamics.AX.Metadata.V6">
+  <Name>ReaOracleForm</Name>
+  <SourceCode>
+    <Methods xmlns="">
+      <Method><Name>classDeclaration</Name><Source><![CDATA[
+[Form]
+public class ReaOracleForm extends FormRun
+{
+}
+]]></Source></Method>
+      <Method><Name>probe</Name><Source><![CDATA[
+public int probe()
+{
+    return 42;
+}
+]]></Source></Method>
+    </Methods>
+    <DataSources xmlns=""/><DataControls xmlns=""/><Members xmlns=""/>
+  </SourceCode>
+  <DataSources/>
+  <Design>
+    <Caption xmlns="">Compiler portability oracle</Caption>
+    <Controls xmlns="">
+      <AxFormControl i:type="AxFormButtonControl"><Name>ProbeButton</Name><Type>Button</Type><FormControlExtension i:nil="true"/><Text>Probe</Text></AxFormControl>
+    </Controls>
+  </Design>
+  <Parts/>
+</AxForm>

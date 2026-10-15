@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+<Name>ReaOracleTypeBad</Name>
+<SourceCode><Declaration><![CDATA[
+public class ReaOracleTypeBad
+{
+}
+]]></Declaration><Methods>
+<Method><Name>broken</Name><Source><![CDATA[
+public static int broken()
+{
+    int value;
+    value = new ReaOracleTypeBad();
+    return value;
+}
+]]></Source></Method>
+</Methods></SourceCode>
+</AxClass>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+<Name>ReaOracleChain_Extension</Name>
+<SourceCode><Declaration><![CDATA[
+[ExtensionOf(classStr(ReaOracleChain))]
+final class ReaOracleChain_Extension
+{
+}
+]]></Declaration><Methods>
+<Method><Name>value</Name><Source><![CDATA[
+public int value(int _input)
+{
+    int result = next value(_input);
+    return result * 2;
+}
+]]></Source></Method>
+</Methods></SourceCode>
+</AxClass>

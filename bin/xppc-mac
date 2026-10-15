@@ -1,0 +1,209 @@
+#!/usr/bin/env python3
+"""Local Microsoft X++ compiler compatibility launcher for macOS."""
+import argparse
+import datetime
+import hashlib
+import json
+import math
+import os
+from pathlib import Path
+import resource
+import signal
+import subprocess
+import sys
+import time
+import shutil
+import xml.etree.ElementTree as ET
+
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def digest(path):
+    h = hashlib.sha256()
+    with path.open('rb') as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b''):
+            h.update(block)
+    return h.hexdigest()
+
+
+def inventory(root):
+    return {str(p.relative_to(root)): digest(p) for p in sorted(root.rglob('*')) if p.is_file()}
+
+
+def config():
+    return json.loads((ROOT / 'installation.json').read_text())
+
+
+def runtime_env():
+    # Host executes with Mono; IKVM reads the separate target reference pack.
+    # Only explicit compatibility settings are recorded, never ambient environment.
+    return {**os.environ, 'BlockXppDevToolsAppInsight': 'true',
+            'XPPC_FRAMEWORK_DIR': str(ROOT / 'framework')}
+
+
+def verify(configured):
+    verified = {}
+    for directory in ('runtime', 'framework', 'references'):
+        verified[directory] = inventory(ROOT / directory)
+        if verified[directory] != configured[directory + '_sha256']:
+            raise RuntimeError('Installed ' + directory + ' changed since installation')
+    if not Path(configured['mono']).is_file():
+        raise RuntimeError('Configured Mono executable is missing: ' + configured['mono'])
+    if digest(Path(configured['mono'])) != configured['mono_sha256']:
+        raise RuntimeError('Configured Mono executable changed; prepare a new installation')
+    return verified
+
+
+def diagnose():
+    c = config()
+    verify(c)
+    mono = subprocess.run([c['mono'], '--version'], capture_output=True, text=True, check=True)
+    framework = subprocess.run([c['mono'], str(ROOT / 'runtime' / 'FrameworkInfo.exe')],
+                               env=runtime_env(), capture_output=True, text=True, check=True)
+    print('Microsoft X++ compiler 7.0.8199.55 — macOS compatibility build')
+    print(mono.stdout.splitlines()[0])
+    print('Runtime, target framework and default references: hashes verified')
+    print(framework.stdout.rstrip())
+    print('Default model references: ' + str(ROOT / 'references'))
+    print('Offline compilation; Windows PDB output and ETW are unavailable.')
+    return 0
+
+
+def compile_model(a):
+    total_start = time.monotonic()
+    c = config()
+    verified = verify(c)
+    metadata = a.metadata.expanduser().resolve(strict=True)
+    output = a.output.expanduser().resolve()
+    if not metadata.is_dir():
+        raise ValueError('Metadata must be a directory')
+    if not a.model or a.model in {'.', '..'} or any(ch in a.model for ch in '/\\\x00\r\n'):
+        raise ValueError('Model module must be a single package name without path separators or control characters')
+    if metadata == output or metadata in output.parents or output in metadata.parents:
+        raise ValueError('Output and source metadata must be separate, nonoverlapping directories')
+    if output.exists():
+        raise ValueError('Output already exists; choose a new directory to prevent stale build results: ' + str(output))
+    references = [p.expanduser().resolve(strict=True) for p in a.reference_folder]
+    if not a.no_default_references:
+        references.append(ROOT / 'references')
+    for path in references:
+        if not path.is_dir():
+            raise ValueError('Reference folder must be a directory: ' + str(path))
+        if path == output or output in path.parents or path in output.parents:
+            raise ValueError('Output and input reference folders must not overlap')
+    for directory in ('runtime', 'framework', 'examples', 'src', 'bin', 'tests'):
+        protected = ROOT / directory
+        if output == protected or protected in output.parents or output in protected.parents:
+            raise ValueError('Output must be separate from installed source and runtime files')
+    for arg in a.compiler_arg:
+        key = arg.lstrip('-/').split('=', 1)[0].casefold()
+        if key in {'metadata', 'compilermetadata', 'modelmodule', 'output', 'log', 'xmllog', 'astoutputpath', 'referencefolder'}:
+            raise ValueError('Use the named launcher option instead of overriding ' + key)
+        if not arg.startswith('-') or '\x00' in arg:
+            raise ValueError('Compiler arguments must start with -')
+    output.mkdir(parents=True, exist_ok=False)
+    staged_metadata = output / 'metadata'
+    # xppc writes XppMetadata caches into its input tree. Keep those writes in a
+    # per-build copy, and exclude previous generated caches from the source copy.
+    shutil.copytree(metadata, staged_metadata, ignore=shutil.ignore_patterns('XppMetadata'))
+    source_hashes = inventory(staged_metadata)
+    bin_dir = output / 'out' / a.model / 'bin'
+    bin_dir.mkdir(parents=True)
+    logs = output / 'logs'
+    logs.mkdir()
+    command = [c['mono']]
+    if a.trace_exceptions:
+        command.append('--trace=E:all')
+    command += [str(ROOT / 'runtime' / 'xppc.exe'), '-metadata=' + str(staged_metadata),
+                '-compilermetadata=' + str(output / 'out'), '-modelmodule=' + a.model,
+                '-output=' + str(bin_dir)]
+    command += ['-referencefolder=' + str(p) for p in references]
+    command += ['-log=' + str(logs / 'xppc.log'), '-xmlLog=' + str(logs / 'xppc.xml'),
+                '-writeAsts', '-astOutputPath=' + str(output / 'asts')]
+    command += a.compiler_arg
+    request = {'model': a.model, 'metadata_input': str(metadata), 'output': str(output),
+               'references': [str(p) for p in references], 'argv': command,
+               'compiler_original_sha256': c['original_sha256']['xppc.exe'],
+               'compiler_compatibility_sha256': c['runtime_sha256']['xppc.exe'],
+               'source_sha256': source_hashes,
+               'reference_sha256': {str(p): verified['references'] if p == ROOT / 'references' else inventory(p) for p in references},
+               'settings': {'BlockXppDevToolsAppInsight': 'true', 'XPPC_FRAMEWORK_DIR': str(ROOT / 'framework')},
+               'started_utc': datetime.datetime.now(datetime.timezone.utc).isoformat()}
+    (output / 'request.json').write_text(json.dumps(request, indent=2) + '\n')
+    before = resource.getrusage(resource.RUSAGE_CHILDREN)
+    start = time.monotonic()
+    interrupted = None
+    with (logs / 'process.log').open('w') as log:
+        proc = subprocess.Popen(command, env=runtime_env(), cwd=output, stdout=log,
+                                stderr=subprocess.STDOUT, start_new_session=True)
+        try:
+            code = proc.wait(timeout=a.timeout)
+        except (subprocess.TimeoutExpired, KeyboardInterrupt) as error:
+            interrupted = 'timeout' if isinstance(error, subprocess.TimeoutExpired) else 'interrupted'
+            # We own this unreaped process group; never signal an unrelated PID.
+            os.killpg(proc.pid, signal.SIGTERM)
+            try:
+                code = proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                os.killpg(proc.pid, signal.SIGKILL)
+                code = proc.wait()
+    compiler_elapsed = time.monotonic() - start
+    after = resource.getrusage(resource.RUSAGE_CHILDREN)
+    diagnostics = []
+    diagnostics_error = None
+    try:
+        document = ET.parse(logs / 'xppc.xml')
+        diagnostics = [{child.tag: child.text or '' for child in node} for node in document.findall('.//Diagnostic')]
+    except (OSError, ET.ParseError) as error:
+        diagnostics_error = str(error)
+    errors = [d for d in diagnostics if d.get('Severity', '').casefold() in {'error', 'fatal'}]
+    warnings = [d for d in diagnostics if d.get('Severity', '').casefold() == 'warning']
+    main_assembly = bin_dir / ('Dynamics.AX.' + a.model + '.dll')
+    artifacts = inventory(output / 'out')
+    successful = code == 0 and not interrupted and not diagnostics_error and not errors and main_assembly.is_file() and any(bin_dir.glob('*.netmodule'))
+    result = {'success': successful, 'exit_code': code, 'interruption': interrupted,
+              'errors': len(errors), 'warnings': len(warnings), 'diagnostics_error': diagnostics_error,
+              'compiler_elapsed_seconds': compiler_elapsed,
+              'launcher_elapsed_seconds': time.monotonic() - total_start,
+              'compiler_cpu_user_seconds': after.ru_utime - before.ru_utime,
+              'compiler_cpu_system_seconds': after.ru_stime - before.ru_stime,
+              'compiler_peak_rss_bytes': after.ru_maxrss,
+              'measurement_scope': 'One compiler child; fresh output, filesystem cache uncontrolled; launcher copy/hash time excluded; no agent-token estimate',
+              'bin': str(bin_dir), 'output_sha256': artifacts, 'diagnostics': diagnostics}
+    (output / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
+    print((logs / 'process.log').read_text(errors='replace')[-2000:].rstrip())
+    for diagnostic in diagnostics:
+        print((diagnostic.get('Severity') or '?') + ': ' + (diagnostic.get('Path') or '') + ': ' + (diagnostic.get('Message') or ''))
+    print(('Build succeeded' if successful else 'Build failed') + ': ' + str(len(errors)) + ' errors, ' + str(len(warnings)) + ' warnings')
+    print('Artifacts: ' + str(bin_dir))
+    print('Evidence: ' + str(output / 'result.json'))
+    return 0 if successful else (code if 0 < code < 126 else 1)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest='command', required=True)
+    commands.add_parser('doctor', help='Verify installed runtime and target framework')
+    build = commands.add_parser('compile', help='Compile native X++ model metadata using the Microsoft compiler')
+    build.add_argument('--metadata', type=Path, required=True, help='Native model/package metadata root; copied into the build directory')
+    build.add_argument('--model', required=True, help='ModelModule from the model descriptor')
+    build.add_argument('--output', type=Path, required=True, help='New build directory (must not exist)')
+    build.add_argument('--reference-folder', type=Path, action='append', default=[], help='Additional compiled package/reference directory; repeatable, searched before defaults')
+    build.add_argument('--no-default-references', action='store_true')
+    build.add_argument('--compiler-arg', action='append', default=[], help='Pass an original compiler option, e.g. --compiler-arg=-retail')
+    build.add_argument('--trace-exceptions', action='store_true')
+    build.add_argument('--timeout', type=float, default=300, help='Compiler timeout in seconds (default: 300)')
+    args = parser.parse_args()
+    if args.command == 'doctor':
+        return diagnose()
+    if not math.isfinite(args.timeout) or args.timeout <= 0:
+        parser.error('--timeout must be finite and positive')
+    return compile_model(args)
+
+
+if __name__ == '__main__':
+    try:
+        raise SystemExit(main())
+    except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as error:
+        print('xppc-mac: ' + str(error), file=sys.stderr)
+        raise SystemExit(1)
