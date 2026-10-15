@@ -1,0 +1,37 @@
+{
+  "format": "xpp-public-dependencies-v1",
+  "packages": {
+    "framework": {
+      "id": "Microsoft.NETFramework.ReferenceAssemblies.net48",
+      "version": "1.0.3",
+      "sha256": "8a7e348538e7eb91351696911689f49e3d4f63f8bab517432bbe159b8b1104a2",
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.netframework.referenceassemblies.net48/1.0.3/microsoft.netframework.referenceassemblies.net48.1.0.3.nupkg",
+      "prefix": "build/.NETFramework/v4.8/",
+      "destination": "framework"
+    },
+    "graph": {
+      "id": "Microsoft.Graph.Core",
+      "version": "1.22.0",
+      "sha256": "47115da5fcc3a743c3a29c8bd0c3513801ed32e66db96d4c2b21d9fb0c109dfb",
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.graph.core/1.22.0/microsoft.graph.core.1.22.0.nupkg",
+      "member": "lib/net45/Microsoft.Graph.Core.dll",
+      "destination": "references/ApplicationPlatform/bin/Microsoft.Graph.Core.dll"
+    },
+    "edm": {
+      "id": "Microsoft.Data.Edm",
+      "version": "5.8.4",
+      "sha256": "62acd295bb1e6f7d2a7a403b290b8c4d302df9c2eaae98a4a48bbab80419bcd6",
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.data.edm/5.8.4/microsoft.data.edm.5.8.4.nupkg",
+      "member": "lib/net40/Microsoft.Data.Edm.dll",
+      "destination": "references/ApplicationPlatform/bin/Microsoft.Data.Edm.dll"
+    },
+    "odata": {
+      "id": "Microsoft.Data.OData",
+      "version": "5.8.4",
+      "sha256": "04493c95f0b181de926e292bd4b9205958e2d61f6b2934fd6ae5e726fe6d037f",
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.data.odata/5.8.4/microsoft.data.odata.5.8.4.nupkg",
+      "member": "lib/net40/Microsoft.Data.OData.dll",
+      "destination": "references/ApplicationPlatform/bin/Microsoft.Data.OData.dll"
+    }
+  }
+}
