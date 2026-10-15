@@ -85,11 +85,52 @@ class TeamSetupTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'differs'):
             team_setup.unpack_bundle(changed, team_setup.sha(changed), destination)
 
-    def test_bundle_rejects_changed_inputs_before_creation(self):
+    def test_bundle_accepts_other_compiler_bytes_without_claiming_compatibility(self):
         (self.compiler / 'xppc.exe').write_bytes(b'changed')
-        with self.assertRaisesRegex(ValueError, 'Compiler differs'):
+        archive = self.bundle()
+        compiler, _, _ = team_setup.unpack_bundle(archive, team_setup.sha(archive), self.root / 'new-inputs')
+        self.assertEqual((compiler / 'xppc.exe').read_bytes(), b'changed')
+        with zipfile.ZipFile(archive) as source:
+            self.assertIn('Not established', json.loads(source.read('bundle.json'))['compatibility'])
+
+    def test_bundle_rejects_modified_prepared_dependencies(self):
+        (self.dependencies / 'framework/mscorlib.dll').write_bytes(b'changed')
+        with self.assertRaisesRegex(ValueError, 'differ from their manifest'):
             self.bundle()
         self.assertFalse((self.root / 'private.zip').exists())
+
+    def test_legacy_bundle_still_round_trips(self):
+        archive = self.bundle()
+        legacy = self.root / 'legacy.zip'
+        with zipfile.ZipFile(archive) as source, zipfile.ZipFile(legacy, 'w') as target:
+            for info in source.infolist():
+                data = source.read(info)
+                if info.filename == 'bundle.json':
+                    manifest = json.loads(data)
+                    manifest.update(format=team_setup.LEGACY_FORMAT, compiler_version='7.0.8199.55',
+                        compiler_inventory_sha256=team_setup.sha(self.repo / 'original-package-sha256.json'),
+                        profile_sha256=team_setup.sha(self.repo / 'profiles/application-platform.json'))
+                    data = json.dumps(manifest).encode()
+                target.writestr(info, data)
+        compiler, _, _ = team_setup.unpack_bundle(legacy, team_setup.sha(legacy), self.root / 'legacy-inputs')
+        self.assertEqual((compiler / 'xppc.exe').read_bytes(), b'original fixture')
+
+    def test_import_accepts_new_versions_but_requires_disambiguation(self):
+        package_id = 'Microsoft.Dynamics.AX.Platform.CompilerPackage'
+        self.write(self.repo / 'tools/microsoft-packages.json', json.dumps({'packages': [
+            {'id': package_id, 'version': '1.0', 'role': 'compiler'}]}).encode())
+        source = self.root / 'downloads'
+        source.mkdir()
+        for version in ('2.0', '3.0'):
+            with zipfile.ZipFile(source / (version + '.nupkg'), 'w') as archive:
+                archive.writestr(package_id + '.nuspec', '<package><metadata><id>' + package_id + '</id><version>' + version + '</version></metadata></package>')
+                archive.writestr('xppc.exe', version.encode())
+        with self.assertRaisesRegex(ValueError, 'Multiple versions'):
+            team_setup.import_packages(source, self.root / 'ambiguous')
+        self.assertFalse((self.root / 'ambiguous').exists())
+        with contextlib.redirect_stdout(io.StringIO()):
+            compiler, _ = team_setup.import_packages(source, self.root / 'selected', {package_id.casefold(): '3.0'})
+        self.assertEqual((compiler / 'xppc.exe').read_bytes(), b'3.0')
 
     def test_archive_path_traversal_aliases_links_and_file_parent_rejected(self):
         cases = [('../outside',), ('/outside',), ('a/../outside',), ('a\\outside',),
@@ -157,6 +198,16 @@ class TeamSetupTests(unittest.TestCase):
         self.assertEqual(command[4], '1.0')
         self.assertIn(str(config), command)
         self.assertNotIn('shell', run.call_args.kwargs)
+
+    def test_restore_honors_selected_version(self):
+        spec = {'id': 'Microsoft.Dynamics.AX.Platform.CompilerPackage', 'version': '1.0'}
+        self.write(self.repo / 'tools/microsoft-packages.json', json.dumps({'packages': [spec]}).encode())
+        nuget, config = self.root / 'nuget', self.root / 'private.config'
+        self.write(nuget, b'fixture')
+        self.write(config, b'<configuration/>')
+        with patch.object(restore_microsoft, 'ROOT', self.repo), patch.object(restore_microsoft.subprocess, 'run') as run, contextlib.redirect_stdout(io.StringIO()):
+            restore_microsoft.main(['--nuget', str(nuget), '--config-file', str(config), '--output', str(self.root / 'restored'), '--compiler-version', '8.0.1234.56'])
+        self.assertEqual(run.call_args.args[0][4], '8.0.1234.56')
 
 
 if __name__ == '__main__':

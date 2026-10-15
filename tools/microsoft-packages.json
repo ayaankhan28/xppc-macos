@@ -1,6 +1,6 @@
 {
   "format": "xpp-microsoft-inputs-v1",
-  "scope": "Exact packages needed by the tested ApplicationPlatform profile; additional model SDK packages are project-specific.",
+  "scope": "Default qualified baseline selections; restore accepts explicit version overrides and import accepts supplied package versions. Additional model SDK packages are project-specific.",
   "acquisition_guide": "https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/dev-tools/hosted-build-automation#nuget-packages",
   "packages": [
     {

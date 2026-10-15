@@ -13,11 +13,14 @@ import sys
 import xml.etree.ElementTree as ET
 import zipfile
 
+from compiler_inputs import identity as compiler_identity
+from microsoft_inputs import add_version_options, version_overrides
 from package_inputs import directory_files, extract, zip_members
 from prepare_dependencies import read_profile, separate, sha
 
 ROOT = Path(__file__).resolve().parent.parent
-FORMAT = 'xpp-private-input-bundle-v1'
+FORMAT = 'xpp-private-input-bundle-v2'
+LEGACY_FORMAT = 'xpp-private-input-bundle-v1'
 NOTICE = ('Private compiler inputs for authorized team use. Microsoft and other '
           'dependencies retain their original terms; the repository MIT license '
           'does not apply to these inputs. This bundle is not an application runtime.\n')
@@ -27,9 +30,9 @@ def compiler_hashes():
     return json.loads((ROOT / 'original-package-sha256.json').read_text())
 
 
-def validate_compiler(files):
+def validate_legacy_compiler(files):
     if {name: row['sha256'] for name, row in files.items()} != compiler_hashes():
-        raise ValueError('Compiler differs from the exact supported 7.0.8199.55 inventory')
+        raise ValueError('Legacy bundle differs from its recorded 7.0.8199.55 inventory')
 
 
 def run(command):
@@ -51,12 +54,13 @@ def package_identity(archive, members):
     return field('id'), field('version')
 
 
-def import_packages(source, output):
+def import_packages(source, output, versions=None):
     separate(output, source)
     if output.exists():
         raise ValueError('Package output already exists: ' + str(output))
     specs = json.loads((ROOT / 'tools/microsoft-packages.json').read_text())['packages']
-    wanted = {(spec['id'].casefold(), spec['version']): spec for spec in specs}
+    versions = versions or {}
+    wanted = {spec['id'].casefold(): spec for spec in specs}
     found = {}
     for path in sorted(source.rglob('*.nupkg')):
         if path.is_symlink():
@@ -65,17 +69,22 @@ def import_packages(source, output):
             members = zip_members(archive)
             identity, version = package_identity(archive, members)
         key = (identity.casefold(), version)
-        if key not in wanted:
+        if key[0] not in wanted or (key[0] in versions and version != versions[key[0]]):
             continue
         if key in found and sha(found[key]) != sha(path):
             raise ValueError('Different archives claim the same package: ' + identity)
         found[key] = path
-    missing = [spec['id'] + ' ' + spec['version'] for key, spec in wanted.items() if key not in found]
-    if missing:
-        raise ValueError('Required packages missing: ' + ', '.join(missing) + '; see docs/microsoft-packages.md')
+    selected = []
+    for package_id, spec in wanted.items():
+        matches = [(key, path) for key, path in found.items() if key[0] == package_id]
+        if not matches:
+            raise ValueError('Required packages missing: ' + spec['id'] + ' ' + versions.get(package_id, '(any supplied version)'))
+        if len(matches) != 1:
+            raise ValueError('Multiple versions supplied for ' + spec['id'] + '; select a version explicitly')
+        key, path = matches[0]
+        selected.append(({**spec, 'version': key[1]}, path))
     records = []
-    for key, spec in wanted.items():
-        path = found[key]
+    for spec, path in selected:
         target = output / spec['id']
         digest = sha(path)
         print('Importing ' + spec['id'] + ' ' + spec['version'], flush=True)
@@ -84,7 +93,7 @@ def import_packages(source, output):
         if sha(path) != digest:
             raise ValueError('Package changed during import: ' + str(path))
         if spec['role'] == 'compiler':
-            validate_compiler(directory_files(target))
+            compiler_identity(target)
         records.append({**spec, 'archive_sha256': digest, 'source': str(path)})
     (output / 'import.json').write_text(json.dumps(records, indent=2) + '\n')
     compiler = output / next(spec['id'] for spec in specs if spec['role'] == 'compiler')
@@ -97,7 +106,7 @@ def make_bundle(compiler, dependencies, output):
     if output.exists() or output.with_suffix(output.suffix + '.sha256').exists():
         raise ValueError('Bundle or checksum already exists; choose a new filename')
     original = directory_files(compiler)
-    validate_compiler(original)
+    selected_compiler = compiler_identity(compiler)
     files = {'compiler/' + name: row for name, row in original.items()}
     for folder in ('framework', 'references'):
         files.update({folder + '/' + name: row for name, row in directory_files(dependencies / folder).items()})
@@ -111,13 +120,8 @@ def make_bundle(compiler, dependencies, output):
     actual = {name: row['sha256'] for name, row in files.items() if not name.startswith('compiler/')}
     if len(expected) != len(rows) or actual != expected:
         raise ValueError('Prepared dependency contents differ from their manifest')
-    profile = read_profile(ROOT / 'profiles/application-platform.json')
-    for name, digest in profile.items():
-        if actual.get('references/' + name) != digest:
-            raise ValueError('Bundle must include the tested reference profile: ' + name)
-    manifest = {'format': FORMAT, 'compiler_version': '7.0.8199.55',
-                'compiler_inventory_sha256': sha(ROOT / 'original-package-sha256.json'),
-                'profile_sha256': sha(ROOT / 'profiles/application-platform.json'),
+    manifest = {'format': FORMAT, 'compiler': selected_compiler,
+                'compatibility': 'Not established by bundling; installer inspection and local tests are required.',
                 'files': files, 'notice': NOTICE,
                 'public_packages': [{key: row[key] for key in ('id', 'version', 'sha256')}
                                     for row in prepared['packages']]}
@@ -147,10 +151,13 @@ def unpack_bundle(bundle, digest, output):
         if 'bundle.json' not in members or members['bundle.json'].file_size > 16 * 1024 * 1024:
             raise ValueError('Missing or oversized bundle manifest')
         manifest = json.loads(archive.read('bundle.json'))
-        if (manifest.get('format') != FORMAT or manifest.get('compiler_version') != '7.0.8199.55'
+        if manifest.get('format') not in (FORMAT, LEGACY_FORMAT):
+            raise ValueError('Unknown private bundle format')
+        legacy = manifest['format'] == LEGACY_FORMAT
+        if legacy and (manifest.get('compiler_version') != '7.0.8199.55'
                 or manifest.get('compiler_inventory_sha256') != sha(ROOT / 'original-package-sha256.json')
                 or manifest.get('profile_sha256') != sha(ROOT / 'profiles/application-platform.json')):
-            raise ValueError('Bundle version or recipe differs from this checkout')
+            raise ValueError('Legacy bundle version or recipe differs from this checkout')
         files = manifest.get('files')
         if not isinstance(files, dict) or not files:
             raise ValueError('Bundle file manifest is empty or invalid')
@@ -159,10 +166,13 @@ def unpack_bundle(bundle, digest, output):
                     or not isinstance(row, dict) or type(row.get('size')) is not int or row['size'] < 0
                     or not isinstance(row.get('sha256'), str) or re.fullmatch('[0-9a-f]{64}', row['sha256']) is None):
                 raise ValueError('Invalid bundle file record: ' + name)
-        validate_compiler({name[len('compiler/'):]: row for name, row in files.items() if name.startswith('compiler/')})
-        for name, expected in read_profile(ROOT / 'profiles/application-platform.json').items():
-            if files.get('references/' + name, {}).get('sha256') != expected:
-                raise ValueError('Bundle reference profile differs: ' + name)
+        if 'compiler/xppc.exe' not in files or not any(name.startswith('framework/') for name in files) or not any(name.startswith('references/') for name in files):
+            raise ValueError('Bundle lacks compiler, framework or references')
+        if legacy:
+            validate_legacy_compiler({name[len('compiler/'):]: row for name, row in files.items() if name.startswith('compiler/')})
+            for name, expected in read_profile(ROOT / 'profiles/application-platform.json').items():
+                if files.get('references/' + name, {}).get('sha256') != expected:
+                    raise ValueError('Legacy bundle reference profile differs: ' + name)
         if set(members) != set(files) | {'bundle.json', 'BUNDLE-NOTICE.md'}:
             raise ValueError('Bundle file set differs from manifest')
         # Manifest/notice are data, never executed, and covered by the whole-file digest.
@@ -173,6 +183,9 @@ def unpack_bundle(bundle, digest, output):
                           'sha256': hashlib.sha256(archive.read(name)).hexdigest()}
                     for name in ('bundle.json', 'BUNDLE-NOTICE.md')}
         extract(archive, members, output, {**files, **metadata})
+    actual_identity = compiler_identity(output / 'compiler')
+    if not legacy and actual_identity != manifest.get('compiler'):
+        raise ValueError('Bundle compiler identity differs from its metadata')
     return output / 'compiler', output / 'framework', output / 'references'
 
 
@@ -193,7 +206,11 @@ def main(argv=None):
     packages = commands.add_parser('from-packages', help='Prepare public dependencies and install from your Microsoft packages')
     packages.add_argument('--compiler-package', type=Path, help='Existing extracted compiler directory')
     packages.add_argument('--sdk', type=Path, action='append', default=[], help='Extracted SDK collection/package; repeatable')
-    packages.add_argument('--package-directory', type=Path, help='Import the three exact .nupkg files from this folder instead')
+    packages.add_argument('--package-directory', type=Path, help='Import compiler and SDK .nupkg files; one version per package or explicit selectors')
+    add_version_options(packages)
+    packages.add_argument('--reference-profile', choices=('supplied', 'qualified'), default='supplied', help='Use supplied SDK contents (default), or reproduce the exact qualified profile')
+    packages.add_argument('--model', action='append', default=[], help='Limit supplied SDK references to these model modules; repeatable')
+    packages.add_argument('--managed-reference', type=Path, action='append', default=[], help='Extra managed reference DLL; repeatable')
     packages.add_argument('--offline', action='store_true')
     packages.add_argument('--package-cache', type=Path, help='Existing public NuGet archive cache')
     bundle = commands.add_parser('from-bundle', help='Verify a team ZIP, build helpers locally and run real compiler checks')
@@ -226,8 +243,10 @@ def main(argv=None):
                 parser.error('--package-directory cannot be combined with --compiler-package or --sdk')
             source = args.package_directory.expanduser().resolve(strict=True)
             separate(work, source)
-            compiler, sdk = import_packages(source, work / 'microsoft')
+            compiler, sdk = import_packages(source, work / 'microsoft', version_overrides(args))
         else:
+            if version_overrides(args):
+                parser.error('Version selectors require --package-directory; extracted paths already select their versions')
             if not args.compiler_package or not args.sdk:
                 parser.error('Supply --compiler-package and --sdk, or --package-directory')
             compiler = args.compiler_package.expanduser().resolve(strict=True)
@@ -236,8 +255,16 @@ def main(argv=None):
                 separate(work, source)
         dependencies = work / 'dependencies'
         command = [sys.executable, ROOT / 'tools/prepare_dependencies.py', '--output', dependencies,
-                   '--search-directory', compiler, '--profile-manifest', ROOT / 'profiles/application-platform.json',
                    '--include-graph', '--include-odata']
+        if args.reference_profile == 'qualified':
+            if args.model:
+                parser.error('--model requires --reference-profile supplied')
+            command += ['--search-directory', compiler, '--profile-manifest', ROOT / 'profiles/application-platform.json']
+        else:
+            for model in args.model:
+                command += ['--model', model]
+        for path in args.managed_reference:
+            command += ['--managed-reference', path.expanduser().resolve(strict=True)]
         for path in sdk:
             command += ['--build-reference', path]
         if args.offline:
