@@ -13,6 +13,13 @@ Users must have appropriate rights to obtain and use those packages and must
 review the terms applicable to their use and adaptation. A source-only release
 is not a determination of those rights.
 
+The optional team-bundle tools package supplied inputs locally and verify them
+on another Mac. They do not upload files, grant package access, determine an
+organization's entitlement, or authorize redistribution. Use your applicable
+Microsoft agreement for any internal delivery. The feed-restore script consumes
+your configured authorized source. See [package acquisition](docs/microsoft-packages.md)
+and [team setup](docs/team-setup.md).
+
 | External component | Role | Upstream source |
 | --- | --- | --- |
 | Microsoft Dynamics AX CompilerPackage | Original X++ compiler; exact supported package required | [Microsoft build packages](https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/dev-tools/hosted-build-automation) |

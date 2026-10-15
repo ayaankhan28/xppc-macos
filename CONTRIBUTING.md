@@ -6,6 +6,11 @@ Keep contributions source-only. Never commit compiler/reference binaries,
 deployment archives, credentials, raw environment logs, or business records.
 Use `.local/` or an external directory for private inputs and generated output.
 
+Team setup tools belong in this source repository. Keep generated input bundles
+and authentication configuration outside tracked files. Package acquisition and
+distribution documentation must distinguish verified content hashes from
+package signatures, access rights and redistribution terms.
+
 Preserve original SDK inputs. Adapt a new installation, validate package hashes,
 and keep diagnostics and access checks active. A new Microsoft compiler version
 needs its own investigated recipe and validation; do not bypass the version gate.

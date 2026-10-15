@@ -2,6 +2,12 @@
 
 The checks distinguish source tooling, real compilation, and comparison against the original Windows compiler. None of these execute the generated application code. The dated [release result](../reports/release-validation.json) records which checks ran for this release.
 
+The subsequent [team setup validation](../reports/team-setup-validation.json)
+records 23 public tests and real fresh installs from extracted packages and an
+offline input bundle. Package identity/import tests use synthetic archives;
+private-feed authentication was not exercised against a live service. The
+compiler adaptation itself is unchanged by that setup update.
+
 ## Public checks
 
 ```sh
@@ -9,7 +15,7 @@ python3 -m unittest discover -s tests -p 'test_*.py' -v
 python3 tools/check_public_tree.py
 ```
 
-The Python tests cover dependency selection, locked archive hashes, offline inputs, conflicting files, unsafe paths, source/output separation, Mono.Cecil discovery, changed installation inputs, and CLI validation. The publication checker rejects executable/package artifacts, unexpected file types, and a focused set of private-data patterns. It is not a comprehensive secret detector.
+The Python tests cover dependency selection, locked archive hashes, offline inputs, conflicting files, unsafe paths, source/output separation, Mono.Cecil discovery, changed installation inputs, and CLI validation. They also cover bundle round trips, checksum/content tampering, package identity, upstream notice retention and the private-feed command contract. The publication checker rejects executable/package artifacts, unexpected file types, and a focused set of private-data patterns. It is not a comprehensive secret detector.
 
 GitHub Actions runs these checks on Linux and macOS. It does not run the Microsoft compiler because the proprietary inputs are not distributed in this repository.
 

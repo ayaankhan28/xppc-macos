@@ -2,6 +2,11 @@
 
 This guide reproduces the pinned Apple Silicon compiler installation. Keep proprietary inputs and generated output in `.local/` or outside the checkout. They are excluded from Git.
 
+For one-command setup from `.nupkg` files, existing folders or an authorized
+private bundle, start with [team setup](team-setup.md). For direct package
+locations and scripted private-feed restore, see [Microsoft inputs](microsoft-packages.md).
+The steps below expose the individual preparation and installation commands.
+
 ## 1. Host tools
 
 Use a native ARM64 terminal on an Apple Silicon Mac. Check existing tools:
@@ -73,7 +78,7 @@ Four public NuGet archives are locked in [`tools/dependency-lock.json`](../tools
 | `Microsoft.Data.Edm` | `5.8.4` | `lib/net40/Microsoft.Data.Edm.dll` |
 | `Microsoft.Data.OData` | `5.8.4` | `lib/net40/Microsoft.Data.OData.dll` |
 
-The helper verifies whole archive hashes before copying selected members. It writes `framework/`, `references/`, and `dependencies.json` containing source provenance. Downloads go to temporary storage; `--package-cache` reads an existing cache and does not populate it. These packages provide build-time references, not runtime implementations.
+The helper verifies whole archive hashes before copying selected members. It writes `framework/`, `references/`, `notices/` with available public-package license/notice files and NuGet manifests, and `dependencies.json` containing source provenance. Downloads go to temporary storage; `--package-cache` reads an existing cache and does not populate it. These packages provide build-time references, not runtime implementations.
 
 ### Offline preparation
 
