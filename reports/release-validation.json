@@ -1,0 +1,192 @@
+{
+  "format": "xpp-compiler-release-validation-v1",
+  "verified_date_utc": "2026-10-15",
+  "compiler_source_commit": "a544b0f9ed9cd7735f34f3323707ca14f9c7cc5e",
+  "scope": "Compiler-only release verification from a clean clone. No generated application code executed.",
+  "host": {
+    "os": "macOS",
+    "version": "27.0.1",
+    "architecture": "arm64",
+    "python": "3.12.14",
+    "mono": "6.14.1",
+    "clang": "21.0.0",
+    "cecil_assembly_version": "0.11.1.0"
+  },
+  "compiler_version": "7.0.8199.55",
+  "original_compiler_package_files": 224,
+  "dependency_preparation": {
+    "official_downloads_hash_verified": true,
+    "framework_files": 368,
+    "model_reference_files": 265,
+    "reference_profile_sha256": "482c83e0c3e7a6c6a035340b588792eb82a29c3f388ccaf32650c293f0fdd706",
+    "package_lock_sha256": "4ea84caa35c1ec604f07769cae6f1cf9ce69d72643e30dfc98b85cb44b70c18d",
+    "source_handling": "Supplied SDK files are read as inputs; selected copies are verified against expected SHA-256 values."
+  },
+  "public_python_tests": {
+    "passed": 15,
+    "failed": 0,
+    "run_from_clean_clone": true
+  },
+  "fresh_installation": {
+    "passed": true,
+    "recipe_files_match_release_source": true,
+    "compiler_fixtures": [
+      {
+        "model": "ReaLab",
+        "pass": true,
+        "exit": 0,
+        "errors": 0,
+        "warnings": 0,
+        "external_reference_warnings": 0,
+        "elapsed_seconds": 2.1190068339928985,
+        "cpu_seconds": 2.459378,
+        "peak_rss_bytes": 565231616
+      },
+      {
+        "model": "ReaOracle",
+        "pass": true,
+        "exit": 0,
+        "errors": 0,
+        "warnings": 0,
+        "external_reference_warnings": 0,
+        "elapsed_seconds": 1.5329618339892477,
+        "cpu_seconds": 1.954615,
+        "peak_rss_bytes": 426590208
+      },
+      {
+        "model": "ReaOraclePlatform",
+        "pass": true,
+        "exit": 0,
+        "errors": 0,
+        "warnings": 1,
+        "external_reference_warnings": 0,
+        "elapsed_seconds": 1.8535768750007264,
+        "cpu_seconds": 2.729897,
+        "peak_rss_bytes": 633602048
+      },
+      {
+        "model": "ReaOracleSyntax",
+        "pass": true,
+        "exit": 2,
+        "errors": 2,
+        "warnings": 0,
+        "external_reference_warnings": 0,
+        "elapsed_seconds": 1.6386075419723056,
+        "cpu_seconds": 2.224684,
+        "peak_rss_bytes": 580665344
+      },
+      {
+        "model": "ReaOracleType",
+        "pass": true,
+        "exit": 1,
+        "errors": 1,
+        "warnings": 0,
+        "external_reference_warnings": 0,
+        "elapsed_seconds": 1.6592062089475803,
+        "cpu_seconds": 2.228567,
+        "peak_rss_bytes": 587186176
+      },
+      {
+        "model": "ReaOracleConsumer",
+        "pass": true,
+        "exit": 0,
+        "errors": 0,
+        "warnings": 0,
+        "external_reference_warnings": 0,
+        "elapsed_seconds": 1.4552441249834374,
+        "cpu_seconds": 1.760865,
+        "peak_rss_bytes": 397705216
+      }
+    ],
+    "strict_external_reference_gate": true,
+    "source_inputs_unchanged": true,
+    "original_compiler_unchanged": true,
+    "stale_output_rejected": true
+  },
+  "windows_comparison": {
+    "diagnostics_equal": {
+      "ReaLab": true,
+      "ReaOracle": true,
+      "ReaOraclePlatform": true,
+      "ReaOracleSyntax": true,
+      "ReaOracleType": true,
+      "ReaOracleConsumer": true
+    },
+    "artifacts": {
+      "ReaLab": {
+        "result": "all-differences-classified",
+        "counts": {
+          "canonical-cil-equal": 3,
+          "excluded-pdb": 3,
+          "identical": 89,
+          "formatting-or-map-order-only": 1,
+          "canonical-cil-equal-except-verified-link-hashes": 1,
+          "archive-order-only": 1
+        },
+        "linked_file_hashes_valid": true
+      },
+      "ReaOracle": {
+        "result": "all-differences-classified",
+        "counts": {
+          "canonical-cil-equal": 3,
+          "excluded-pdb": 3,
+          "identical": 89,
+          "formatting-or-map-order-only": 1,
+          "canonical-cil-equal-except-verified-link-hashes": 1,
+          "archive-order-only": 1
+        },
+        "linked_file_hashes_valid": true
+      },
+      "ReaOraclePlatform": {
+        "result": "all-differences-classified",
+        "counts": {
+          "canonical-cil-equal": 4,
+          "excluded-pdb": 4,
+          "identical": 89,
+          "formatting-or-map-order-only": 1,
+          "canonical-cil-equal-except-verified-link-hashes": 1,
+          "archive-order-only": 1
+        },
+        "linked_file_hashes_valid": true
+      },
+      "ReaOracleConsumer": {
+        "result": "all-differences-classified",
+        "counts": {
+          "canonical-cil-equal": 4,
+          "excluded-pdb": 3,
+          "identical": 91
+        },
+        "linked_file_hashes_valid": true
+      }
+    },
+    "baseline_distributed": false,
+    "scope": "Structural comparison with independently retained original Windows compiler fixture outputs; PDBs excluded, no whole-file byte equality claim."
+  },
+  "compatibility_checks": {
+    "core_type_selection_count": 1098,
+    "core_nested_type_count": 69,
+    "core_type_windows_baseline_compared": false,
+    "framework_identity_and_shape_cases": 15,
+    "native_memory_and_directory_checks": true
+  },
+  "repeat_installation": {
+    "existing_hashes_verified": true,
+    "verification_ran_again": true,
+    "passed_without_windows_baseline": true
+  },
+  "retained_local_verification_summary_sha256": [
+    "4836246fce57ac75003f62efd4b3f23ab356f338fb36a512023c80c39e8a9589",
+    "c9bcb0b6caa644c7e77a4b29792cd01f92e93d1fe750c2e217341f55e8b34060"
+  ],
+  "known_target_pack_issues": [
+    "System.Activities.Statements: absent assembly",
+    "System.Windows.Controls.Ribbon: manifest public-key-token mismatch"
+  ],
+  "measurement_scope": "Compiler child elapsed, CPU and RSS are in each build. Fresh output; filesystem cache uncontrolled. Comparison CPU and agent-token costs not measured.",
+  "not_qualified": [
+    "Other compiler or SDK versions",
+    "Intel Macs",
+    "Windows PDB generation",
+    "Execution of emitted application code"
+  ]
+}
