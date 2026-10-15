@@ -2,7 +2,6 @@
 """Local Microsoft X++ compiler compatibility launcher for macOS."""
 import argparse
 import datetime
-import hashlib
 import json
 import math
 import os
@@ -16,18 +15,8 @@ import shutil
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parent.parent
-
-
-def digest(path):
-    h = hashlib.sha256()
-    with path.open('rb') as stream:
-        for block in iter(lambda: stream.read(1024 * 1024), b''):
-            h.update(block)
-    return h.hexdigest()
-
-
-def inventory(root):
-    return {str(p.relative_to(root)): digest(p) for p in sorted(root.rglob('*')) if p.is_file()}
+sys.path.insert(0, str(ROOT / 'tools'))
+from compiler_inputs import inventory, sha as digest
 
 
 def config():
@@ -42,6 +31,10 @@ def runtime_env():
 
 
 def verify(configured):
+    status = configured.get('verification_status')
+    if status is not None and status != 'passed':
+        if status != 'pending' or os.environ.get('XPPC_VERIFY_INSTALLATION') != str(ROOT):
+            raise RuntimeError('Installation verification has not passed; rerun install.py --verify')
     verified = {}
     for directory in ('runtime', 'framework', 'references'):
         verified[directory] = inventory(ROOT / directory)
@@ -60,7 +53,9 @@ def diagnose():
     mono = subprocess.run([c['mono'], '--version'], capture_output=True, text=True, check=True)
     framework = subprocess.run([c['mono'], str(ROOT / 'runtime' / 'FrameworkInfo.exe')],
                                env=runtime_env(), capture_output=True, text=True, check=True)
-    print('Microsoft X++ compiler 7.0.8199.55 — macOS compatibility build')
+    print('Microsoft X++ compiler ' + c['compiler_version'] + ' — macOS compatibility build')
+    print('Verification: ' + c.get('verification_status', 'legacy installation'))
+    print('Original input matches qualified release: ' + str(c.get('compatibility', {}).get('qualified_compiler_inputs', False)))
     print(mono.stdout.splitlines()[0])
     print('Runtime, target framework and default references: hashes verified')
     print(framework.stdout.rstrip())

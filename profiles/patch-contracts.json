@@ -1,0 +1,126 @@
+{
+  "format": "xpp-patch-contracts-v1",
+  "recipe": "managed-framework-v1",
+  "modules": {
+    "Microsoft.Dynamics.AX.DesignTime.Telemetry.dll": {
+      "methods": {
+        "System.Void Microsoft.Dynamics.AX.DesignTime.Telemetry.Utility::.cctor() [arity=0;this=False;calling=0]": [
+          "b2efe03ef8f575ee33318e1c49d18fd76bd79d743b58341643db277d5de8b108"
+        ]
+      }
+    },
+    "Microsoft.Dynamics.AX.Framework.BestPracticeFramework.dll": {
+      "methods": {}
+    },
+    "Microsoft.Dynamics.AX.Framework.Diagnostics.dll": {
+      "methods": {}
+    },
+    "Microsoft.Dynamics.AX.Framework.Xlnt.XppCore.dll": {
+      "methods": {
+        "Microsoft.ApplicationInsights.TelemetryClient Microsoft.Dynamics.AX.Metadata.XppCompiler.CompilerTracer::get_OneDSTelemetryClient() [arity=0;this=False;calling=0]": [
+          "8582b7014a14c008fe770581b90494300c647044c38d50bb5c6c8e7755f4a3c7"
+        ],
+        "System.String Microsoft.Dynamics.AX.Metadata.XppCompiler.CompilerTracer::GetStackTraceWithILOffsets(System.Exception) [arity=0;this=False;calling=0]": [
+          "ee12c4f484190a629c7e5a5b71ae8649163f2e1f4f82227fbd8bf0e0d7bc565e"
+        ],
+        "System.UInt64 Microsoft.Dynamics.AX.Metadata.XppCompiler.CompilerTracer::GetPhysicalMemoryOnMachine() [arity=0;this=False;calling=0]": [
+          "a08eca9f9c7282452661fd62bb72ab73e39aabb1802346d86dda986b1c2606c1"
+        ]
+      }
+    },
+    "Microsoft.Dynamics.AX.Framework.Xlnt.XppParser.Pass2.dll": {
+      "methods": {
+        "IKVM.Reflection.Assembly Microsoft.Dynamics.AX.Framework.Xlnt.XppParser.Pass2.AssemblyResolver::GetAssemblyByReflection(System.String) [arity=0;this=True;calling=0]": [
+          "8ec765cd38172555c46ce4b38c39f65aec25650c8043346562092ebbea7d54bb"
+        ],
+        "IKVM.Reflection.Assembly Microsoft.Dynamics.AX.Framework.Xlnt.XppParser.Pass2.AssemblyResolver::GetAssemblyFromPath(System.String,System.String) [arity=0;this=True;calling=0]": [
+          "47ae9f5a742965b29bf2359bacca585650321b6877fd8dbc4375b46422488dda"
+        ],
+        "System.Void Microsoft.Dynamics.AX.Framework.Xlnt.XppParser.Pass2.AssemblyResolver::.ctor(IKVM.Reflection.Universe,System.String,System.Collections.Generic.IEnumerable`1<System.String>,System.String) [arity=0;this=True;calling=0]": [
+          "b306862313ab259deeeb489bad0f30e9ee23e3924e7f03a96d82204d4b711353"
+        ]
+      }
+    },
+    "Microsoft.Dynamics.AX.Framework.xlnt.IKVM.Reflection.dll": {
+      "methods": {
+        "IKVM.Reflection.Assembly IKVM.Reflection.Universe::DefaultResolver(System.String,System.Boolean) [arity=0;this=True;calling=0]": [
+          "1109eb9f5b7aeba75b0d2331e59008078e58568f590b379fc0af755cb962b091"
+        ],
+        "IKVM.Reflection.Type IKVM.Reflection.Universe::ImportImpl(System.Type) [arity=0;this=True;calling=0]": [
+          "c28c23a6703ec289b46ff29925a5ae8cc458462176a757878ae9753c780a1e08"
+        ],
+        "System.Void IKVM.Reflection.Writer.ModuleWriter::WriteModuleImpl(IKVM.Reflection.StrongNameKeyPair,System.Byte[],IKVM.Reflection.Emit.ModuleBuilder,IKVM.Reflection.Emit.PEFileKinds,IKVM.Reflection.PortableExecutableKinds,IKVM.Reflection.ImageFileMachine,IKVM.Reflection.Writer.ResourceSection,System.Int32,System.IO.Stream) [arity=0;this=False;calling=0]": [
+          "115eef4a3730e10b8f4ccc1dc54b8c781c66aa35b0b7ed298f5e4aa40b88efdf"
+        ]
+      }
+    },
+    "Microsoft.Dynamics.AX.Metadata.Core.dll": {
+      "methods": {
+        "System.String Microsoft.Dynamics.AX.Metadata.Core.CoreHelper::ReplaceLineFeedWithNewLine(System.String) [arity=0;this=False;calling=0]": [
+          "dc0d73431db4a857aa8ebe3db3548e84eb2226c65a782e3db7d1556663dc1c93"
+        ],
+        "System.String Microsoft.Dynamics.AX.Metadata.Core.MetaModel.CDataString::RemoveCRNLAssymetry(System.String) [arity=0;this=False;calling=0]": [
+          "26942426a343ebfbb7db33e23aa2915d498e1ac31ff55d95761e41ab17f09efa"
+        ],
+        "System.Void Microsoft.Dynamics.AX.Metadata.Core.MetaModel.CDataString::WriteXml(System.Xml.XmlWriter) [arity=0;this=True;calling=0]": [
+          "1764d4b5a4f114466125028a0477ba780e91bcf5e56f12fa18cf13a2d9bd4c95"
+        ]
+      }
+    },
+    "Microsoft.Dynamics.AX.Metadata.Extensions.dll": {
+      "methods": {
+        "System.String Microsoft.Dynamics.AX.Metadata.Extensions.DebuggingURLBuilder::GetDebuggingURL(Microsoft.Dynamics.AX.Metadata.Core.MetaModel.ISingleKeyedMetadata`1<System.String>,Microsoft.Dynamics.AX.Metadata.MetaModel.MetaReadHeader,Microsoft.Dynamics.AX.Metadata.Providers.IMetadataProvider) [arity=0;this=False;calling=0]": [
+          "8d550d1f2c3cffba2b0568d9bce51f6f26e2ed0f5513ccbc81e76a72a03a9471"
+        ]
+      }
+    },
+    "Microsoft.Dynamics.AX.Metadata.Storage.dll": {
+      "methods": {
+        "System.Boolean Microsoft.Dynamics.AX.Metadata.Storage.DiskProviders.FileStreamProvider::Exists(System.String) [arity=0;this=True;calling=0]": [
+          "7ff6fc1ac168054f853d5b0dd0db20e4bcec74f806edb623f9b946f808e01145"
+        ],
+        "System.IO.Stream Microsoft.Dynamics.AX.Metadata.Storage.DiskProviders.FileStreamProvider::GetSharedReadStream(System.String) [arity=0;this=True;calling=0]": [
+          "5594ecc933510046771a6dc752647cc2e5fed598070b086eeec5bfc08f3aa4a2"
+        ]
+      }
+    },
+    "Microsoft.Dynamics.AX.Metadata.dll": {
+      "methods": {
+        "System.Void Microsoft.Dynamics.AX.Metadata.IO.MetadataExtendsWriter::Write(System.IO.Stream,System.Collections.Concurrent.ConcurrentDictionary`2<System.String,System.String>,System.Func`2<System.Collections.Generic.KeyValuePair`2<System.String,System.String>,System.String>) [arity=0;this=False;calling=0]": [
+          "4288f104dfee646f53268750e00c31f6d3cd52cc3be981e3135383a52448aadf"
+        ]
+      }
+    },
+    "Microsoft.Dynamics.ApplicationPlatform.XppServices.Instrumentation.dll": {
+      "methods": {}
+    },
+    "xppc.exe": {
+      "methods": {
+        "System.Boolean Microsoft.Dynamics.AX.Framework.Xlnt.ILGenerator.Parameters::ValidateParameters() [arity=0;this=True;calling=0]": [
+          "49f806589a07f7c20b23939ff63a24df0f45a20db5080b97ec33afbbc09a316a"
+        ],
+        "System.Reflection.Assembly Microsoft.Dynamics.AX.Framework.Xlnt.ILGenerator.Util.ILGeneratorReflectionHelper::ReflectionOnlyAssemblyResolve(System.Object,System.ResolveEventArgs) [arity=0;this=False;calling=0]": [
+          "4ec7ffa87d485e4c0759985334629c267b38903a643f425c19350a1d19af390b"
+        ],
+        "System.Void Microsoft.Dynamics.AX.Framework.Xlnt.ILGenerator.DeleteActionsGraph::WriteToStream(System.IO.Stream) [arity=0;this=True;calling=0]": [
+          "698cfc0a8bc595c74e79390dccc25b63fa7d9fb453a9bc7fe6831edd8736aa88"
+        ],
+        "System.Void Microsoft.Dynamics.AX.Framework.Xlnt.ILGenerator.ILGeneratorPass1Worker/MetadataExtendsList::.ctor(Microsoft.Dynamics.AX.Framework.Xlnt.ILGenerator.Parameters,Microsoft.Dynamics.AX.Framework.Xlnt.XppParser.IXppcMetadataProvider) [arity=0;this=True;calling=0]": [
+          "c5bec378aac50e04ce18a9f483b72df63781cf4db02b11d18fd0d5a8415b2d34"
+        ],
+        "System.Void Microsoft.Dynamics.AX.Framework.Xlnt.ILGenerator.ILGeneratorPass3Worker::AddResourceToAssembly(IKVM.Reflection.Emit.AssemblyBuilder,System.Xml.XmlDocument,System.String,System.String,Microsoft.Dynamics.AX.Framework.Xlnt.ILGenerator.FileRollbackHandler,Microsoft.Dynamics.AX.Metadata.XppCompiler.IDiagnosticSink) [arity=0;this=False;calling=0]": [
+          "0aa581a47f51bda8b99c1eb98cc4f1a4c0d855a6b1f663ec080271d4210dae66"
+        ],
+        "System.Void Microsoft.Dynamics.AX.Framework.Xlnt.ILGenerator.ILGeneratorPass4Worker::AddResourceToAssembly(IKVM.Reflection.Emit.AssemblyBuilder,System.Xml.XmlDocument,System.String,System.String,Microsoft.Dynamics.AX.Framework.Xlnt.ILGenerator.FileRollbackHandler,Microsoft.Dynamics.AX.Metadata.XppCompiler.IDiagnosticSink) [arity=0;this=False;calling=0]": [
+          "77d3f8e3f4535eb8acb3c41054b5e8c722155072d34246e65b117eee34963a44"
+        ],
+        "System.Void Microsoft.Dynamics.AX.Framework.Xlnt.ILGenerator.TableMappingsGraph::WriteToStream(System.IO.Stream) [arity=0;this=True;calling=0]": [
+          "f270d84b96fda7e8119a5177776833aefae2105e3ae21e3421d92a538ec07f05"
+        ],
+        "System.Void Microsoft.Dynamics.AX.Framework.Xlnt.ILGenerator.Util.ILGeneratorReflectionHelper::PopulateKnownTypes(System.String) [arity=0;this=False;calling=0]": [
+          "0efb0cb59b2b2f096c556d5e4e250611b8cfd444431e6eaec2e215a918d62884"
+        ]
+      }
+    }
+  }
+}

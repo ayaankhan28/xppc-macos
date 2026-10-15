@@ -16,6 +16,7 @@ class Port
                 return r.DeclaringType.Namespace.StartsWith("Microsoft.Dynamics.ApplicationPlatform.") && r.DeclaringType.Namespace.EndsWith(".Instrumentation") && r.Name.StartsWith("EventWrite");
             }).ToList();
         if(matches.Count==0) return;
+        if(m.Types.Any(t=>t.FullName=="Local.MacCompatibility.EtwUnavailable"))throw new InvalidOperationException("Input already contains a local ETW adapter");
         var adapter=new TypeDefinition("Local.MacCompatibility", "EtwUnavailable", TypeAttributes.NotPublic | TypeAttributes.Abstract | TypeAttributes.Sealed, m.TypeSystem.Object);
         m.Types.Add(adapter);
         var replacements=new System.Collections.Generic.Dictionary<string,MethodDefinition>();
@@ -42,28 +43,16 @@ class Port
     }
     static int Main(string[] args)
     {
-        if(args.Length!=2)throw new ArgumentException("usage: Port.exe ORIGINAL_PACKAGE PRIVATE_OUTPUT_COPY");
-        if(Path.GetFullPath(args[0]).TrimEnd(Path.DirectorySeparatorChar)==Path.GetFullPath(args[1]).TrimEnd(Path.DirectorySeparatorChar))throw new ArgumentException("Original package must never be the output directory");
-        var known = new System.Collections.Generic.Dictionary<string,string> {
-            {"Microsoft.Dynamics.AX.Metadata.Core.dll","095f321783b9b19e22811eeacc3f7ff42e8d1cf5e9c505d3442707e3a39f8d70"},
-            {"Microsoft.Dynamics.AX.Metadata.dll","b68a60426c8939c235fdebc1f630131dbe666b7222e8ce5aa68820c76064239a"},
-
-            {"xppc.exe","cd56f1c5a8565cafc1f935e25ba0cc29dd68176fe7e0db6dbabf0d781f6d2159"},
-            {"Microsoft.Dynamics.AX.Framework.Xlnt.XppCore.dll","ce66fd3c5b632c3327060c85b563ac85bdcc07ba2e0afa7486962dc77972e604"},
-            {"Microsoft.Dynamics.AX.DesignTime.Telemetry.dll","9c8affcf37ada99d5870e176e33bd705cf5d75b3563cf1dd5042a534ca9e2f3d"},
-            {"Microsoft.Dynamics.AX.Framework.Xlnt.XppParser.Pass2.dll","b6c97310f9f1f8d1615b9939a2842c4d3f3096f053219cadb283f0cc2782b499"},
-            {"Microsoft.Dynamics.AX.Framework.Diagnostics.dll","13c1bca4dc86cb8cbfb3a3dbc35fdf5f40ecd2aec70573bd88362af71a38b04e"},
-            {"Microsoft.Dynamics.AX.Framework.BestPracticeFramework.dll","d62d428c951e729f1b88474d5be70ba90c931079b72dbba0a3406f8e8e676867"},
-            {"Microsoft.Dynamics.AX.Framework.xlnt.IKVM.Reflection.dll","0b35b48da96af12b87a678a5111acc428f8a0c5c71b9ffb040354f2258ddabad"},
-            {"Microsoft.Dynamics.ApplicationPlatform.XppServices.Instrumentation.dll","1e72e0f6ab4dbbd2e40e8c59b850fcca80ad8850a7ab509fa2a0a9b1eaa8ed8e"},
-            {"Microsoft.Dynamics.AX.Metadata.Storage.dll","b840ae346602b5805d3780dcf6c21171e30a535af1c9595f7670bf133f423019"},
-            {"Microsoft.Dynamics.AX.Metadata.Extensions.dll","6ea646e84a439ebabeae9e32aca0230eb0ae58c73d1741f80dbff146051b13e4"}
-        };
-        foreach(var item in known)using(var stream=File.OpenRead(Path.Combine(args[0],item.Key)))using(var hash=System.Security.Cryptography.SHA256.Create()) {
-            var actual=BitConverter.ToString(hash.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
-            if(actual!=item.Value)throw new InvalidOperationException("Unsupported compiler bytes: "+item.Key);
-        }
-        string original = args[0], output = args[1];
+        if(args.Length!=5 || !new[]{"probe","apply","capture"}.Contains(args[0]))throw new ArgumentException("usage: Port.exe probe|apply|capture ORIGINAL_PACKAGE HELPER_OR_OUTPUT_DIRECTORY CONTRACT_JSON REPORT_JSON");
+        if(Path.GetFullPath(args[1]).TrimEnd(Path.DirectorySeparatorChar)==Path.GetFullPath(args[2]).TrimEnd(Path.DirectorySeparatorChar))throw new ArgumentException("Original package must never be the output directory");
+        PatchContracts.Configure(args[1],args[3],args[4],args[0]);
+        Exception failure=null;
+        try { Adapt(args[1],args[2]); } catch(Exception error) { failure=error; }
+        PatchContracts.Complete(failure);
+        return 0;
+    }
+    static void Adapt(string original, string output)
+    {
         var resolver = new DefaultAssemblyResolver();
         resolver.AddSearchDirectory(original);
         resolver.AddSearchDirectory(output);
@@ -76,7 +65,7 @@ class Port
                 var type = m.Types.Single(t => t.FullName == "Microsoft.Dynamics.AX.Framework.Xlnt.ILGenerator.Parameters");
                 var method = type.Methods.Single(t => t.Name == "ValidateParameters");
                 var calls = method.Body.Instructions.Where(i => i.OpCode == OpCodes.Call && i.Operand is MethodReference && ((MethodReference)i.Operand).FullName == "System.Security.AccessControl.DirectorySecurity System.IO.Directory::GetAccessControl(System.String)").ToList();
-                if (calls.Count != 1 || calls[0].Next.OpCode != OpCodes.Pop) throw new InvalidOperationException("Unexpected ACL callsite; refusing to adapt");
+                if (calls.Count != 1 || calls[0].Next == null || calls[0].Next.OpCode != OpCodes.Pop) throw new InvalidOperationException("Unexpected ACL callsite; refusing to adapt");
                 calls[0].Operand = m.ImportReference(helpers.Methods.Single(t => t.Name == "CheckMetadataDirectory"));
                 var populate=m.GetType("Microsoft.Dynamics.AX.Framework.Xlnt.ILGenerator.Util.ILGeneratorReflectionHelper").Methods.Single(x=>x.Name=="PopulateKnownTypes");
                 var getTypes=populate.Body.Instructions.Single(i=>i.Operand is MethodReference && ((MethodReference)i.Operand).FullName=="System.Type[] System.Reflection.Assembly::GetTypes()");
@@ -108,7 +97,7 @@ class Port
                     }
                 }
                 RedirectEtw(m);
-                m.Write(Path.Combine(output, "xppc.exe"));
+                PatchContracts.Write(m,Path.Combine(output, "xppc.exe"));
                 Console.WriteLine("xppc.exe: replaced one discarded ACL query with effective-user directory access check");
             }
             using (var m = ModuleDefinition.ReadModule(Path.Combine(original, "Microsoft.Dynamics.AX.Framework.Xlnt.XppCore.dll"), reader))
@@ -133,7 +122,7 @@ class Port
                 cil.InsertBefore(first, cil.Create(OpCodes.Ldnull));
                 cil.InsertBefore(first, cil.Create(OpCodes.Ret));
                 RedirectEtw(m);
-                m.Write(Path.Combine(output, m.Name));
+                PatchContracts.Write(m,Path.Combine(output, m.Name));
                 Console.WriteLine("XppCore.dll: physical-memory query mapped to sysctl hw.memsize");
             }
         }
@@ -147,7 +136,7 @@ class Port
             il.InsertBefore(next, il.Create(OpCodes.Call, t.Methods.Single(x => x.Name == "get_SendingToAppInsightsBlockedByUser")));
             il.InsertBefore(next, il.Create(OpCodes.Brfalse, next));
             il.InsertBefore(next, il.Create(OpCodes.Ret));
-            m.Write(Path.Combine(output, m.Name));
+            PatchContracts.Write(m,Path.Combine(output, m.Name));
             Console.WriteLine("Telemetry: honor explicit opt-out before Windows identity/domain probes and client creation");
         }
         foreach(var name in new[] { "Microsoft.Dynamics.AX.Framework.Xlnt.XppParser.Pass2.dll", "Microsoft.Dynamics.AX.Framework.Diagnostics.dll", "Microsoft.Dynamics.AX.Framework.BestPracticeFramework.dll", "Microsoft.Dynamics.AX.Framework.xlnt.IKVM.Reflection.dll", "Microsoft.Dynamics.ApplicationPlatform.XppServices.Instrumentation.dll" }) {
@@ -195,7 +184,7 @@ class Port
                     sil.InsertBefore(sfirst,sil.Create(OpCodes.Ldarg_2));sil.InsertBefore(sfirst,sil.Create(OpCodes.Ldnull));sil.InsertBefore(sfirst,sil.Create(OpCodes.Stfld,field));
                     Console.WriteLine("IKVM: Windows PDB output omitted; PE/CIL and manifest hashing retained");
                 }
-                m.Write(Path.Combine(output,name));
+                PatchContracts.Write(m,Path.Combine(output,name));
             }
         }
         using (var m=ModuleDefinition.ReadModule(Path.Combine(original,"Microsoft.Dynamics.AX.Metadata.Storage.dll"),reader)) {
@@ -212,7 +201,7 @@ class Port
                 eil.Emit(OpCodes.Call,m.ImportReference(compat.GetType("XppMacCompatibility").Methods.Single(x=>x.Name=="PathExists")));eil.Emit(OpCodes.Ret);
             }
             RedirectEtw(m);
-            m.Write(Path.Combine(output,m.Name));
+            PatchContracts.Write(m,Path.Combine(output,m.Name));
             Console.WriteLine("Metadata.Storage: selected existing managed shared-read implementation");
         }
         using(var m=ModuleDefinition.ReadModule(Path.Combine(original,"Microsoft.Dynamics.AX.Metadata.Core.dll"),reader))using(var h=ModuleDefinition.ReadModule(Path.Combine(output,"XppMacCompatibility.dll"))) {
@@ -226,13 +215,13 @@ class Port
                 if(calls.Count!=pair.Count)throw new InvalidOperationException("Unexpected CDataString newline producer");
                 foreach(var call in calls) {call.OpCode=OpCodes.Ldstr;call.Operand="\r\n";}
             }
-            m.Write(Path.Combine(output,m.Name));
+            PatchContracts.Write(m,Path.Combine(output,m.Name));
             Console.WriteLine("Metadata.Core: Windows target declaration newline convention at XML read/write boundary");
         }
         using(var m=ModuleDefinition.ReadModule(Path.Combine(original,"Microsoft.Dynamics.AX.Metadata.dll"),reader)) {
             var writer=m.GetType("Microsoft.Dynamics.AX.Metadata.IO.MetadataExtendsWriter").Methods.Single(x=>x.Name=="Write");
             SetWindowsWriterNewline(m,writer);
-            m.Write(Path.Combine(output,m.Name));
+            PatchContracts.Write(m,Path.Combine(output,m.Name));
             Console.WriteLine("Metadata: Windows target newlines in runtime metadata streams");
         }
         using(var m=ModuleDefinition.ReadModule(Path.Combine(original,"Microsoft.Dynamics.AX.Metadata.Extensions.dll"),reader)) {
@@ -240,9 +229,8 @@ class Port
             var separator=method.Body.Instructions.Single(i=>i.OpCode==OpCodes.Ldsfld && i.Operand is FieldReference && ((FieldReference)i.Operand).FullName=="System.Char System.IO.Path::DirectorySeparatorChar");
             separator.OpCode=OpCodes.Ldc_I4;separator.Operand=92;
             RedirectEtw(m); // Also adapt report-discovery ETW on macOS.
-            m.Write(Path.Combine(output,m.Name));
+            PatchContracts.Write(m,Path.Combine(output,m.Name));
             Console.WriteLine("Metadata.Extensions: preserve Windows target xppSource logical IDs independently of host paths");
         }
-        return 0;
     }
 }

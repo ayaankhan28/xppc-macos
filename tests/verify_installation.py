@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Verify real compiler fixtures; optionally compare independently supplied Windows outputs."""
 import argparse
-import hashlib
 import json
 import os
 from pathlib import Path
@@ -10,6 +9,8 @@ import sys
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / 'tools'))
+from compiler_inputs import inventory
 
 
 def run(command, log, env=None):
@@ -72,14 +73,16 @@ def main():
     for line in core_output.splitlines():
         token, name, nested = line.split('\t')
         actual.append((int(token), name, nested == 'True'))
-    if len(actual) != 1098 or sum(v[2] for v in actual) != 69 or len(set(actual)) != len(actual):
-        raise RuntimeError('Pinned core-type inventory changed')
+    if not actual or len({v[0] for v in actual}) != len(actual) or len({v[1] for v in actual}) != len(actual) or any(not v[1] or v[0] >> 24 != 2 for v in actual):
+        raise RuntimeError('Invalid or ambiguous core-type inventory')
+    if c.get('compatibility', {}).get('qualified_compiler_inputs', True) and (len(actual) != 1098 or sum(v[2] for v in actual) != 69):
+        raise RuntimeError('Qualified core-type inventory changed')
     if a.core_type_baseline:
         golden = json.loads(a.core_type_baseline.read_text(encoding='utf-8-sig'))
         expected = [(t['metadata_token'], t['full_name'], t['is_nested']) for t in golden['types']]
         if actual != expected:
             raise RuntimeError('Core-type selection/order differs from the supplied Windows baseline')
-    print('PASS pinned core type inventory: ' + str(len(actual)) + ' types')
+    print('PASS core type inventory: ' + str(len(actual)) + ' types')
     run([c['mono'], ROOT / 'tests/FrameworkTests.exe'], output / 'framework.log', env)
     accessible, missing, denied = [output / n for n in ('readable-directory', 'absent-directory', 'denied-directory')]
     accessible.mkdir()
@@ -91,8 +94,7 @@ def main():
         denied.chmod(0o700)
     print('PASS framework type/identity cases and native access checks')
     original = Path(c['source_paths']['compiler'])
-    original_unchanged = {str(p.relative_to(original)): hashlib.sha256(p.read_bytes()).hexdigest()
-                          for p in original.rglob('*') if p.is_file() and '__pycache__' not in p.parts} == c['original_sha256']
+    original_unchanged = inventory(original) == c['original_sha256']
     if not original_unchanged:
         raise RuntimeError('Original compiler package changed')
     report = {'passed': True, 'compiler_version': c['compiler_version'], 'builds': smoke['builds'],

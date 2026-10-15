@@ -8,6 +8,25 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parent.parent
 
+NEGATIVE_DIAGNOSTICS = {
+    'ReaOracleSyntax': ('IllegalToken', 'dynamics://Class/ReaOracleSyntaxBad/Method/broken', '5'),
+    'ReaOracleType': ('ImplicitConversionNotAllowed', 'dynamics://Class/ReaOracleTypeBad/Method/broken', '6'),
+}
+
+
+def case_passed(model, expected_exit, expected_messages, result, exit_code, qualified):
+    if result['interruption'] or result['diagnostics_error'] or exit_code != result['exit_code']:
+        return False
+    if result['success'] != (expected_exit == 0):
+        return False
+    if qualified or expected_exit == 0:
+        return exit_code == expected_exit and all(message in [d.get('Message', '') for d in result['diagnostics']] for message in expected_messages)
+    moniker, path, line = NEGATIVE_DIAGNOSTICS[model]
+    errors = [d for d in result['diagnostics'] if d.get('Severity', '').casefold() in ('error', 'fatal')]
+    return (exit_code > 0 and bool(errors)
+            and all(d.get('DiagnosticType') == 'Compile' and d.get('Severity') == 'Error' for d in errors)
+            and any(d.get('Moniker') == moniker and d.get('Path') == path and d.get('Line') == line for d in errors))
+
 
 def inventory(path):
     return {str(p.relative_to(path)): hashlib.sha256(p.read_bytes()).hexdigest()
@@ -22,6 +41,8 @@ def main():
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     before = inventory(ROOT / 'examples')
+    configured = json.loads((ROOT / 'installation.json').read_text())
+    qualified = configured.get('compatibility', {}).get('qualified_compiler_inputs', True)
     cases = [('ReaLab', 0, []), ('ReaOracle', 0, []), ('ReaOraclePlatform', 0, []),
              ('ReaOracleSyntax', 2, ["Invalid token ';'."]),
              ('ReaOracleType', 1, ["Cannot implicitly convert from type 'ReaOracleTypeBad' to type 'int'."]),
@@ -36,10 +57,7 @@ def main():
         done = subprocess.run(command, capture_output=True, text=True)
         (output / (model + '-launcher.log')).write_text(done.stdout + done.stderr)
         result = json.loads((dest / 'result.json').read_text())
-        messages = [d.get('Message', '') for d in result['diagnostics']]
-        passed = done.returncode == expected_exit and result['exit_code'] == expected_exit
-        passed = passed and result['success'] == (expected_exit == 0)
-        passed = passed and all(message in messages for message in expected_messages)
+        passed = case_passed(model, expected_exit, expected_messages, result, done.returncode, qualified)
         reference_warnings = sum(d.get('DiagnosticType') == 'ExternalReference' for d in result['diagnostics'])
         if args.strict_references:
             passed = passed and reference_warnings == 0
