@@ -22,6 +22,7 @@ __pycache__/
 *.netmodule
 *.nupkg
 *.zip
+*.zip.sha256
 *.tar.gz
 *.pem
 *.pfx

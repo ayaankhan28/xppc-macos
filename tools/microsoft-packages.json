@@ -1,0 +1,25 @@
+{
+  "format": "xpp-microsoft-inputs-v1",
+  "scope": "Exact packages needed by the tested ApplicationPlatform profile; additional model SDK packages are project-specific.",
+  "acquisition_guide": "https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/dev-tools/hosted-build-automation#nuget-packages",
+  "packages": [
+    {
+      "id": "Microsoft.Dynamics.AX.Platform.CompilerPackage",
+      "version": "7.0.8199.55",
+      "asset_name": "Compiler Tools",
+      "role": "compiler"
+    },
+    {
+      "id": "Microsoft.Dynamics.AX.Platform.DevALM.BuildXpp",
+      "version": "7.0.8199.55",
+      "asset_name": "Platform Build Reference",
+      "role": "sdk"
+    },
+    {
+      "id": "Microsoft.Dynamics.AX.ApplicationSuite.DevALM.BuildXpp",
+      "version": "10.0.2790.83",
+      "asset_name": "Application Suite Build Reference",
+      "role": "sdk"
+    }
+  ]
+}

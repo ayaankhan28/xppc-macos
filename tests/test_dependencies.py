@@ -26,6 +26,8 @@ class DependencyTests(unittest.TestCase):
             package.writestr('build/.NETFramework/v4.8/mscorlib.dll', b'test reference bytes')
             package.writestr('build/.NETFramework/v4.8/RedistList/FrameworkList.xml', '<FileList/>')
             package.writestr('other/readme', 'not selected')
+            package.writestr('Fixture.Framework.nuspec', '<package/>')
+            package.writestr('LICENSE.txt', 'upstream fixture terms')
         self.lock = self.root / 'lock.json'
         self.spec = {'id': 'Fixture.Framework', 'version': '1.0.0',
                      'sha256': dependencies.sha(self.archive),
@@ -57,6 +59,8 @@ class DependencyTests(unittest.TestCase):
                                 '--build-reference', second.parents[2])
         self.assertEqual((output / 'references/Model/bin/Dependency.dll').read_bytes(), b'reference')
         self.assertFalse((output / 'framework/other').exists())
+        self.assertEqual((output / 'notices/Fixture.Framework/LICENSE.txt').read_text(), 'upstream fixture terms')
+        self.assertTrue((output / 'notices/Fixture.Framework/Fixture.Framework.nuspec').is_file())
         manifest = json.loads((output / 'dependencies.json').read_text())
         row = next(row for row in manifest['files'] if row['path'].startswith('references/'))
         self.assertEqual(len(row['sources']), 2)

@@ -17,7 +17,7 @@ jobs:
           python-version: '3.12'
       - name: Check source release boundaries
         run: python3 tools/check_public_tree.py --tracked-only
-      - name: Test dependency preparation and launcher boundaries
+      - name: Test dependency preparation, team setup and launcher boundaries
         run: python3 -m unittest discover -s tests -p 'test_*.py' -v
       # Actual X++ builds need caller-supplied Microsoft packages on ARM64 macOS.
       # See docs/validation.md. These public checks do not claim compiler parity.

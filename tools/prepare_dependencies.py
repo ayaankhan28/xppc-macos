@@ -235,6 +235,15 @@ def add_package(plan, archive, spec, provenance):
         seen.add(info.filename.casefold())
         if stat.S_ISLNK(info.external_attr >> 16):
             raise ValueError('Symlink archive member: ' + info.filename)
+        basename = PurePosixPath(info.filename).name.lower()
+        notice = (basename.endswith('.nuspec') or
+                  (re.match(r'^(license|licence|copying|copyright|notice|third[._ -]?party|eula)', basename)
+                   and PurePosixPath(basename).suffix in ('', '.txt', '.md', '.rtf', '.html', '.htm')))
+        if notice:
+            with archive.open(info) as stream:
+                digest = hash_stream(stream)
+            plan.add('notices/' + spec['id'] + '/' + info.filename, digest,
+                     {**provenance, 'member': info.filename}, (archive, info))
         if 'prefix' in spec and info.filename.startswith(spec['prefix']):
             target = spec['destination'] + '/' + info.filename[len(spec['prefix']):]
         elif info.filename == spec.get('member'):
